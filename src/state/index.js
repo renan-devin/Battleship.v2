@@ -8,7 +8,7 @@
  * Phases: 'placement' -> 'battle' -> 'victory' | 'defeat'.
  */
 
-import { chooseTarget } from '../ai/index.js';
+import { DIFFICULTIES, chooseTarget } from '../ai/index.js';
 import {
   FLEET,
   ORIENTATIONS,
@@ -174,9 +174,13 @@ export function resetPlacements(state) {
 /**
  * @param {object} state
  * @param {string} difficulty
- * @returns {object}
+ * @returns {object} Same state for an unknown difficulty or once the battle started.
  */
 export function setDifficulty(state, difficulty) {
+  if (!DIFFICULTIES.includes(difficulty) || state.phase !== 'placement') {
+    return state;
+  }
+
   return { ...state, difficulty };
 }
 
@@ -243,7 +247,7 @@ export function fireAtPlayer(state, random) {
     return state;
   }
 
-  const target = chooseTarget(state.enemyShots, random);
+  const target = chooseTarget(state.enemyShots, random, state.difficulty);
 
   if (!target) {
     return state;

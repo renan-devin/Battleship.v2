@@ -9,6 +9,7 @@ import {
   isGameOver,
   randomizePlacements,
   resetPlacements,
+  setDifficulty,
   startBattle,
   startNewGame,
 } from '../src/state/index.js';
@@ -110,6 +111,35 @@ describe('fireAtPlayer', () => {
     expect(fireAtPlayer(state, () => 0)).toBe(state);
   });
 
+  it('follows up on a hit when the difficulty is hard', () => {
+    const damaged = battleState({
+      turn: 'enemy',
+      difficulty: 'hard',
+      enemyShots: [{ row: 0, column: 2, hit: true, shipId: 'carrier' }],
+    });
+
+    const state = fireAtPlayer(damaged, () => 0.999);
+
+    const { row, column } = state.lastShot;
+
+    expect([
+      { row: 1, column: 2 },
+      { row: 0, column: 1 },
+      { row: 0, column: 3 },
+    ]).toContainEqual({ row, column });
+  });
+
+  it('keeps firing at random on easy', () => {
+    const damaged = battleState({
+      turn: 'enemy',
+      enemyShots: [{ row: 0, column: 2, hit: true, shipId: 'carrier' }],
+    });
+
+    const state = fireAtPlayer(damaged, () => 0.999);
+
+    expect(state.lastShot).toMatchObject({ row: 9, column: 9 });
+  });
+
   it('ends the match in defeat when the player fleet is destroyed', () => {
     let state = battleState({ turn: 'enemy' });
 
@@ -120,6 +150,20 @@ describe('fireAtPlayer', () => {
     expect(state.phase).toBe('defeat');
     expect(state.turn).toBeNull();
     expect(isGameOver(state)).toBe(true);
+  });
+});
+
+describe('setDifficulty', () => {
+  it('switches the opponent while placing the fleet', () => {
+    expect(setDifficulty(createInitialState(), 'hard').difficulty).toBe('hard');
+  });
+
+  it('ignores unknown values and changes made mid battle', () => {
+    const state = createInitialState();
+    const running = battleState({ difficulty: 'easy' });
+
+    expect(setDifficulty(state, 'nightmare')).toBe(state);
+    expect(setDifficulty(running, 'hard')).toBe(running);
   });
 });
 
