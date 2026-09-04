@@ -382,11 +382,12 @@ button.ship:hover {
   border-radius: 3px 3px 999px 999px;
 }
 
-.cell.cell--preview-valid {
+/* Outranks the hover rule so the cell under the cursor shows the preview. */
+.cell.cell--preview-valid:not(:disabled):not([aria-disabled='true']) {
   background: var(--color-sonar);
 }
 
-.cell.cell--preview-invalid {
+.cell.cell--preview-invalid:not(:disabled):not([aria-disabled='true']) {
   background: var(--color-alert);
 }
 
