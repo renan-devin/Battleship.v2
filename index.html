@@ -18,6 +18,9 @@
         <button type="button" id="random">Random</button>
         <button type="button" id="reset">Reset</button>
         <button type="button" id="orientation" aria-pressed="false">Orientation: Horizontal</button>
+        <button type="button" id="start-battle" class="button--primary" disabled>
+          Start Battle
+        </button>
 
         <label class="difficulty" for="difficulty">
           Difficulty
@@ -29,22 +32,26 @@
       </section>
 
       <section class="status" aria-label="Game status">
-        <p id="status-message" aria-live="polite"></p>
+        <p class="status__turn" id="turn-indicator">Deployment</p>
+        <p class="status__message" id="status-message" aria-live="polite"></p>
       </section>
 
       <div class="layout">
         <section class="fleet-panel" aria-labelledby="fleet-title">
-          <h2 id="fleet-title">Fleet</h2>
-          <p class="fleet-panel__hint">
+          <h2 id="fleet-title">Your fleet</h2>
+          <p class="fleet-panel__hint" id="fleet-hint">
             Select a ship, press <kbd>R</kbd> to rotate and click a cell on your board. Click a
             placed ship to take it back.
           </p>
           <div class="fleet-roster" id="fleet-roster"></div>
+
+          <h2 class="fleet-panel__subtitle" id="enemy-fleet-title">Enemy fleet</h2>
+          <div class="fleet-roster" id="enemy-roster"></div>
         </section>
 
         <div class="boards">
           <section class="board-panel" aria-labelledby="player-board-title">
-            <h2 id="player-board-title">Your fleet</h2>
+            <h2 id="player-board-title">Your waters</h2>
             <div
               class="board"
               id="player-board"
@@ -65,6 +72,15 @@
         </div>
       </div>
     </main>
+
+    <div class="result" id="result" hidden>
+      <div class="result__card" role="alertdialog" aria-labelledby="result-title" aria-modal="true">
+        <p class="result__eyebrow">Battle report</p>
+        <h2 class="result__title" id="result-title"></h2>
+        <p class="result__detail" id="result-detail"></p>
+        <button type="button" class="button--primary" id="result-restart">New Game</button>
+      </div>
+    </div>
 
     <script type="module" src="/src/main.js"></script>
   </body>

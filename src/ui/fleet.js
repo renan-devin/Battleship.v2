@@ -1,55 +1,89 @@
 /**
  * UI layer: fleet roster rendering.
  *
- * Lists the fleet so a ship can be selected before placing it, and shows which
- * ships are already on the board.
+ * The roster doubles as ship selector during placement and as damage report
+ * during the battle: pips light up as a ship takes hits and the row is marked
+ * when it sinks.
  */
 
-import { FLEET } from '../engine/index.js';
+import { FLEET, getShipHitCount, getSunkShipIds } from '../engine/index.js';
 
 /**
- * Creates one button per ship in the fleet.
+ * Creates one row per ship in the fleet.
  *
  * @param {HTMLElement} container
- * @returns {HTMLButtonElement[]} The created buttons, in fleet order.
+ * @param {{ interactive?: boolean }} [options] - Non-interactive rosters render as plain rows.
+ * @returns {HTMLElement[]} The created rows, in fleet order.
  */
-export function renderFleetRoster(container) {
+export function renderFleetRoster(container, options = {}) {
+  const { interactive = true } = options;
   container.replaceChildren();
 
   return FLEET.map((ship) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'ship';
-    button.dataset.shipId = ship.id;
-    button.append(
+    const row = document.createElement(interactive ? 'button' : 'div');
+    row.className = 'ship';
+    row.dataset.shipId = ship.id;
+
+    if (interactive) {
+      row.type = 'button';
+    }
+
+    row.append(
       createSpan('ship__name', ship.name),
       createShipPips(ship.size),
       createSpan('ship__status', ''),
     );
-    container.append(button);
-    return button;
+    container.append(row);
+    return row;
   });
 }
 
 /**
- * Reflects selection and placement status on the roster buttons.
+ * Reflects selection, placement status and battle damage on a roster.
  *
- * @param {HTMLButtonElement[]} buttons
- * @param {object} state
+ * @param {HTMLElement[]} rows
+ * @param {object} options
+ * @param {Array<object>} options.placements - Ships owned by the roster's side.
+ * @param {Array<object>} [options.shots] - Shots fired at those ships.
+ * @param {string|null} [options.selectedShipId]
+ * @param {boolean} [options.showPlacement] - Show Placed/Pending instead of damage.
  */
-export function paintFleetRoster(buttons, state) {
-  const placedIds = new Set(state.placements.map((placement) => placement.shipId));
+export function paintFleetRoster(rows, options) {
+  const { placements, shots = [], selectedShipId = null, showPlacement = false } = options;
+  const placedIds = new Set(placements.map((placement) => placement.shipId));
+  const sunkIds = new Set(getSunkShipIds(placements, shots));
 
-  for (const button of buttons) {
-    const shipId = button.dataset.shipId;
+  for (const row of rows) {
+    const shipId = row.dataset.shipId;
     const placed = placedIds.has(shipId);
-    const selected = state.selectedShipId === shipId;
+    const selected = selectedShipId === shipId;
+    const sunk = sunkIds.has(shipId);
+    const hits = getShipHitCount(placements, shots, shipId);
 
-    button.classList.toggle('ship--placed', placed);
-    button.classList.toggle('ship--selected', selected);
-    button.setAttribute('aria-pressed', String(selected));
-    button.querySelector('.ship__status').textContent = placed ? 'Placed' : 'Pending';
+    row.classList.toggle('ship--placed', placed);
+    row.classList.toggle('ship--selected', selected);
+    row.classList.toggle('ship--sunk', sunk);
+
+    if (row.tagName === 'BUTTON') {
+      row.setAttribute('aria-pressed', String(selected));
+    }
+
+    row.querySelector('.ship__status').textContent = showPlacement
+      ? statusForPlacement(placed)
+      : statusForBattle(sunk, hits, row.querySelectorAll('.ship__pip').length);
+
+    row.querySelectorAll('.ship__pip').forEach((pip, index) => {
+      pip.classList.toggle('ship__pip--hit', !showPlacement && index < hits);
+    });
   }
+}
+
+function statusForPlacement(placed) {
+  return placed ? 'Placed' : 'Pending';
+}
+
+function statusForBattle(sunk, hits, size) {
+  return sunk ? 'Sunk' : `${hits}/${size}`;
 }
 
 function createSpan(className, text) {
