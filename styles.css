@@ -1,10 +1,45 @@
+/**
+ * Naval design tokens and base layout.
+ *
+ * Colors, typography and spacing are exposed as custom properties so later
+ * phases can refine the visual identity without touching component rules.
+ */
+
 :root {
-  --color-background: #0b1b2b;
-  --color-surface: #12314c;
-  --color-cell: #1d4a72;
-  --color-cell-hover: #2a6497;
-  --color-text: #eef5fb;
-  --color-focus: #ffd166;
+  /* Palette: deep ocean night with sonar accents. */
+  --color-abyss: #04121f;
+  --color-deep: #0a2033;
+  --color-hull: #123049;
+  --color-hull-strong: #1b4667;
+  --color-water: #16405f;
+  --color-water-hover: #1f5b82;
+  --color-sonar: #46d5c2;
+  --color-signal: #ffd166;
+  --color-alert: #ef6461;
+  --color-steel: #8fb2c9;
+  --color-text: #e8f2fa;
+  --color-text-muted: #9db6c9;
+
+  /* Typography */
+  --font-display: 'Segoe UI Semibold', 'Trebuchet MS', system-ui, sans-serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --letter-spacing-wide: 0.14em;
+
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+
+  /* Shape */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --border-hairline: 1px solid rgb(143 178 201 / 25%);
+  --shadow-panel: 0 10px 30px rgb(2 10 18 / 45%);
+
   --cell-size: 2rem;
 }
 
@@ -14,69 +49,187 @@
 
 body {
   margin: 0;
-  padding: 1.5rem;
+  padding: var(--space-5);
   min-height: 100vh;
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    sans-serif;
+  font-family: var(--font-body);
   color: var(--color-text);
-  background-color: var(--color-background);
+  background: radial-gradient(circle at 20% -10%, var(--color-deep), var(--color-abyss) 60%);
 }
 
 h1,
 h2 {
-  margin: 0 0 0.75rem;
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-display);
+}
+
+h1 {
+  font-size: 2rem;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+h2 {
+  font-size: 1rem;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-steel);
+}
+
+.app-header {
+  margin-bottom: var(--space-5);
+}
+
+.app-header__eyebrow {
+  margin: 0 0 var(--space-1);
+  font-size: 0.75rem;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-sonar);
 }
 
 .app-main {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-5);
 }
 
 .controls {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .controls button,
 .difficulty select {
-  padding: 0.5rem 1rem;
+  padding: var(--space-2) var(--space-4);
   font: inherit;
   color: var(--color-text);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-cell-hover);
-  border-radius: 0.375rem;
+  background-color: var(--color-hull);
+  border: var(--border-hairline);
+  border-radius: var(--radius-md);
   cursor: pointer;
 }
 
 .controls button:hover,
 .difficulty select:hover {
-  background-color: var(--color-cell-hover);
+  background-color: var(--color-hull-strong);
 }
 
 .difficulty {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
 }
 
 .status {
   min-height: 1.5rem;
+  padding: var(--space-2) var(--space-4);
+  background-color: rgb(18 48 73 / 55%);
+  border-left: 3px solid var(--color-sonar);
+  border-radius: var(--radius-sm);
 }
 
 .status p {
   margin: 0;
 }
 
+.layout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-6);
+}
+
+.fleet-panel {
+  min-width: 15rem;
+  padding: var(--space-4);
+  background-color: rgb(10 32 51 / 80%);
+  border: var(--border-hairline);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-panel);
+}
+
+.fleet-panel__hint {
+  margin: 0 0 var(--space-4);
+  max-width: 22rem;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.fleet-panel kbd {
+  padding: 0 var(--space-1);
+  font-family: inherit;
+  color: var(--color-signal);
+  border: var(--border-hairline);
+  border-radius: var(--radius-sm);
+}
+
+.fleet-roster {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ship {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-1) var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  font: inherit;
+  text-align: left;
+  color: var(--color-text);
+  background-color: var(--color-hull);
+  border: var(--border-hairline);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.ship:hover {
+  background-color: var(--color-hull-strong);
+}
+
+.ship--selected {
+  border-color: var(--color-sonar);
+  box-shadow: inset 3px 0 0 var(--color-sonar);
+}
+
+.ship--placed .ship__pip {
+  background-color: var(--color-sonar);
+}
+
+.ship__name {
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+}
+
+.ship__status {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-size: 0.75rem;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.ship__pips {
+  display: flex;
+  gap: 3px;
+}
+
+.ship__pip {
+  width: 0.75rem;
+  height: 0.375rem;
+  background-color: var(--color-steel);
+  border-radius: 1px;
+}
+
 .boards {
   display: flex;
   flex-wrap: wrap;
-  gap: 2rem;
+  gap: var(--space-6);
 }
 
 .board {
@@ -85,25 +238,39 @@ h2 {
   grid-template-rows: repeat(10, var(--cell-size));
   gap: 2px;
   padding: 2px;
-  background-color: var(--color-surface);
-  border-radius: 0.25rem;
+  background-color: var(--color-hull);
+  border: var(--border-hairline);
+  border-radius: var(--radius-md);
 }
 
 .cell {
   width: var(--cell-size);
   height: var(--cell-size);
   padding: 0;
-  background-color: var(--color-cell);
-  border: 1px solid var(--color-surface);
+  background-color: var(--color-water);
+  border: 1px solid var(--color-deep);
   border-radius: 2px;
   cursor: pointer;
 }
 
 .cell:hover {
-  background-color: var(--color-cell-hover);
+  background-color: var(--color-water-hover);
+}
+
+.cell--ship {
+  background-color: var(--color-steel);
+  border-color: var(--color-text);
+}
+
+.cell--preview-valid {
+  background-color: var(--color-sonar);
+}
+
+.cell--preview-invalid {
+  background-color: var(--color-alert);
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-focus);
+  outline: 3px solid var(--color-signal);
   outline-offset: 2px;
 }
