@@ -761,7 +761,7 @@ h3 {
 }
 
 /* The shot that was just fired keeps a halo until the next one lands. */
-.cell--latest {
+.cell.cell--latest {
   z-index: 5;
   box-shadow:
     0 0 0 2px var(--color-signal),
