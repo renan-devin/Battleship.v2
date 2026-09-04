@@ -209,6 +209,32 @@ h2 {
   color: var(--color-alert);
 }
 
+.status__resumed {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-sonar);
+  animation: surface var(--duration-medium) var(--ease-out) both;
+}
+
+.status__resumed[hidden] {
+  display: none;
+}
+
+/* Sonar ping drawn with a single element, no external assets. */
+.status__resumed::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border: 1px solid currentcolor;
+  border-top-color: transparent;
+  border-radius: 50%;
+}
+
 .layout {
   display: flex;
   flex-wrap: wrap;
@@ -512,6 +538,13 @@ button.ship:hover {
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
+}
+
+@keyframes surface {
+  from {
+    transform: translateY(-0.25rem);
+    opacity: 0;
+  }
 }
 
 @keyframes rise {

@@ -28,6 +28,15 @@ in play.
   the ends of the inferred line, then the neighbours of a lone hit - and only resumes the
   sweep once the ship is sunk.
 
+## Saved matches
+
+The match is written to `localStorage` under `battleship.v2.match` after every move, so a
+reload picks it up where it stopped and the status bar shows a `Resumed` chip. A reload
+during the enemy reply restores the pending enemy turn, which then fires once. `New Game`
+wipes the save. A save that is unreadable, from another version or inconsistent with the
+engine rules - a ship off the board, overlapping ships, a repeated shot, a hit that does
+not match the fleet, a winner nobody earned - is discarded and the game starts fresh.
+
 ## Requirements
 
 - Node.js 18.18 or newer
