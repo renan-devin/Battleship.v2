@@ -1,12 +1,22 @@
 /**
  * State layer: pure logic, no DOM, no framework.
  *
- * Orchestrates the engine for the placement phase: which ship is selected,
- * the current orientation and the placements made so far. Every function is
- * side-effect free and returns a new state object.
+ * Orchestrates the engine across the two phases of a match: placing the fleet
+ * and firing at the enemy. Every function is side-effect free and returns a
+ * new state object.
+ *
+ * Phases: 'placement' -> 'battle' -> 'victory' | 'defeat'.
  */
 
-import { FLEET, ORIENTATIONS, placeShip, placeShipsRandomly, removeShip } from '../engine/index.js';
+import { chooseTarget } from '../ai/index.js';
+import {
+  FLEET,
+  ORIENTATIONS,
+  fireAt,
+  placeShip,
+  placeShipsRandomly,
+  removeShip,
+} from '../engine/index.js';
 
 /**
  * @returns {object} A fresh placement state with no ship on the board.
@@ -18,7 +28,28 @@ export function createInitialState() {
     orientation: ORIENTATIONS.horizontal,
     selectedShipId: FLEET[0].id,
     placements: [],
+    enemyPlacements: [],
+    playerShots: [],
+    enemyShots: [],
+    turn: null,
+    lastShot: null,
   };
+}
+
+/**
+ * @param {object} state
+ * @returns {boolean} True while the match is being played.
+ */
+export function isBattleActive(state) {
+  return state.phase === 'battle';
+}
+
+/**
+ * @param {object} state
+ * @returns {boolean} True once the match ended, either way.
+ */
+export function isGameOver(state) {
+  return state.phase === 'victory' || state.phase === 'defeat';
 }
 
 /**
@@ -72,7 +103,7 @@ export function toggleOrientation(state) {
  * @returns {object} New state, or the same state when the move is invalid.
  */
 export function placeSelectedShip(state, origin) {
-  if (!state.selectedShipId) {
+  if (state.phase !== 'placement' || !state.selectedShipId) {
     return state;
   }
 
@@ -104,6 +135,10 @@ export function placeSelectedShip(state, origin) {
  * @returns {object}
  */
 export function removePlacedShip(state, shipId) {
+  if (state.phase !== 'placement') {
+    return state;
+  }
+
   if (!state.placements.some((placement) => placement.shipId === shipId)) {
     return state;
   }
@@ -117,6 +152,10 @@ export function removePlacedShip(state, shipId) {
  * @returns {object} State with a full random fleet and nothing left to place.
  */
 export function randomizePlacements(state, random) {
+  if (state.phase !== 'placement') {
+    return state;
+  }
+
   return { ...state, placements: placeShipsRandomly(random), selectedShipId: null };
 }
 
@@ -125,7 +164,7 @@ export function randomizePlacements(state, random) {
  * @returns {object} Empty board, keeping the chosen difficulty.
  */
 export function resetPlacements(state) {
-  return { ...createInitialState(), difficulty: state.difficulty };
+  return startNewGame(state);
 }
 
 /**
@@ -135,4 +174,92 @@ export function resetPlacements(state) {
  */
 export function setDifficulty(state, difficulty) {
   return { ...state, difficulty };
+}
+
+/**
+ * Deploys the enemy fleet and hands the first turn to the player.
+ *
+ * @param {object} state
+ * @param {() => number} [random]
+ * @returns {object} Same state when the player fleet is not ready yet.
+ */
+export function startBattle(state, random) {
+  if (state.phase !== 'placement' || !isPlacementComplete(state)) {
+    return state;
+  }
+
+  return {
+    ...state,
+    phase: 'battle',
+    turn: 'player',
+    selectedShipId: null,
+    enemyPlacements: placeShipsRandomly(random),
+    playerShots: [],
+    enemyShots: [],
+    lastShot: null,
+  };
+}
+
+/**
+ * Player shot at the enemy board. Turn passes to the enemy unless the match ends.
+ *
+ * @param {object} state
+ * @param {{ row: number, column: number }} target
+ * @returns {object} Same state when it is not the player's turn or the cell was already fired at.
+ */
+export function fireAtEnemy(state, target) {
+  if (!isBattleActive(state) || state.turn !== 'player') {
+    return state;
+  }
+
+  const { shots, ...outcome } = fireAt(state.enemyPlacements, state.playerShots, target);
+
+  if (outcome.result !== 'hit' && outcome.result !== 'miss') {
+    return state;
+  }
+
+  return {
+    ...state,
+    playerShots: shots,
+    phase: outcome.fleetDestroyed ? 'victory' : 'battle',
+    turn: outcome.fleetDestroyed ? null : 'enemy',
+    lastShot: { by: 'player', ...target, ...outcome },
+  };
+}
+
+/**
+ * Enemy shot at the player board, chosen by the AI for the current difficulty.
+ *
+ * @param {object} state
+ * @param {() => number} [random]
+ * @returns {object} Same state when it is not the enemy's turn.
+ */
+export function fireAtPlayer(state, random) {
+  if (!isBattleActive(state) || state.turn !== 'enemy') {
+    return state;
+  }
+
+  const target = chooseTarget(state.enemyShots, random);
+
+  if (!target) {
+    return state;
+  }
+
+  const { shots, ...outcome } = fireAt(state.placements, state.enemyShots, target);
+
+  return {
+    ...state,
+    enemyShots: shots,
+    phase: outcome.fleetDestroyed ? 'defeat' : 'battle',
+    turn: outcome.fleetDestroyed ? null : 'player',
+    lastShot: { by: 'enemy', ...target, ...outcome },
+  };
+}
+
+/**
+ * @param {object} state
+ * @returns {object} A brand new match, keeping the chosen difficulty.
+ */
+export function startNewGame(state) {
+  return { ...createInitialState(), difficulty: state.difficulty };
 }
