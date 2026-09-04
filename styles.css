@@ -580,28 +580,54 @@ h3 {
 }
 
 .ship-shape__hull {
-  fill: currentcolor;
+  fill: color-mix(in srgb, currentcolor 42%, var(--color-abyss));
+  stroke: color-mix(in srgb, currentcolor 80%, var(--color-abyss));
+  stroke-width: 0.5;
+}
+
+.ship-shape__deck {
+  fill: color-mix(in srgb, currentcolor 35%, #cbab74);
+}
+
+.ship-shape__flightdeck {
+  fill: color-mix(in srgb, currentcolor 26%, var(--color-abyss));
 }
 
 .ship-shape__tower,
-.ship-shape__detail,
-.ship-shape__fin {
-  fill: color-mix(in srgb, currentcolor 70%, var(--color-abyss));
+.ship-shape__fin,
+.ship-shape__plane {
+  fill: color-mix(in srgb, currentcolor 92%, var(--color-abyss));
 }
 
-.ship-shape__turret {
+.ship-shape__detail,
+.ship-shape__gunhouse {
+  fill: color-mix(in srgb, currentcolor 72%, var(--color-abyss));
+}
+
+.ship-shape__turret,
+.ship-shape__funnel,
+.ship-shape__mount {
+  fill: color-mix(in srgb, currentcolor 30%, var(--color-abyss));
+}
+
+.ship-shape__barrel {
   fill: color-mix(in srgb, currentcolor 55%, var(--color-abyss));
 }
 
 .ship-shape__line {
   fill: none;
-  stroke: color-mix(in srgb, currentcolor 45%, var(--color-abyss));
-  stroke-width: 1.2;
+  stroke: color-mix(in srgb, currentcolor 38%, var(--color-abyss));
+  stroke-width: 0.9;
   stroke-linecap: round;
 }
 
-.board__ship--sunk .ship-shape__hull {
-  fill: color-mix(in srgb, currentcolor 75%, var(--color-abyss));
+.ship-shape__line--dashed {
+  stroke-dasharray: 3 3;
+  stroke-width: 0.8;
+}
+
+.board__ship--sunk .ship-shape__deck {
+  fill: color-mix(in srgb, currentcolor 55%, var(--color-abyss));
 }
 
 /* Outranks the hover rule so the cell under the cursor shows the preview. */

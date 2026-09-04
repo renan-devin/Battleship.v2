@@ -45,81 +45,207 @@ const SHAPES = {
   destroyer: buildDestroyer,
 };
 
-/** Carrier: full-length flight deck with a discreet island to starboard. */
+/** Carrier: full flight deck, deck markings, aircraft and a starboard island. */
 function buildCarrier(length) {
+  const beam = 10.8;
+  const bow = length * 0.12;
+
   return [
-    path(
-      'hull',
-      `M 3 3.5 L ${length - 13} 3.5 L ${length - 2} ${MID} L ${length - 13} ${UNIT - 3.5} L 3 ${UNIT - 3.5} Q 1.5 ${MID} 3 3.5 Z`,
-    ),
-    path('line', `M 7 ${MID} H ${length - 15}`),
-    rect('tower', length * 0.6, 2.5, length * 0.1, 4.5, 1.5),
-    rect('detail', length * 0.2, 8.5, 4, 3, 1),
-    rect('detail', length * 0.36, 13, 4, 3, 1),
-    rect('detail', length * 0.72, 15, 4, 3, 1),
+    hullPath('hull', 1.2, length - 1.2, beam, bow, bow * 0.8),
+    hullPath('flightdeck', 2.6, length - 2.6, beam - 1.6, bow * 0.8, bow * 0.7),
+    line(`M ${bow} ${MID} H ${length - bow}`, 'line--dashed'),
+    line(`M ${bow * 0.8} ${MID - 7.8} H ${length - bow}`),
+    line(`M ${bow * 0.8} ${MID + 7.8} H ${length - bow}`),
+    ...plane(length * 0.22, MID - 4.6),
+    ...plane(length * 0.4, MID + 4.6),
+    ...plane(length * 0.55, MID - 4.6),
+    ...plane(length * 0.8, MID + 4.6),
+    rect('tower', length * 0.58, MID + 5, length * 0.11, 5.8, 1.2),
+    rect('funnel', length * 0.62, MID + 6.2, length * 0.035, 3.4, 0.8),
+    line(`M ${length * 0.67} ${MID + 5.2} V ${MID + 10.4}`),
+    rect('detail', length * 0.12, MID + 8.6, length * 0.05, 2.4, 0.8),
+    rect('detail', length * 0.88, MID - 11, length * 0.05, 2.4, 0.8),
   ];
 }
 
-/** Battleship: heavy hull, three main turrets, bridge and funnel. */
+/** Battleship: heavy hull, three twin turrets, bridge tower and two funnels. */
 function buildBattleship(length) {
+  const beam = 9.4;
+
   return [
-    hull(length),
-    path('line', `M 6 ${MID} H ${length - 8}`),
-    turret(length * 0.2, 3.6),
-    turret(length * 0.34, 3.6),
-    turret(length * 0.78, 3.4),
-    rect('tower', length * 0.44, 7, length * 0.12, 10, 2),
-    rect('detail', length * 0.6, 8.5, length * 0.07, 7, 2),
+    ...warshipHull(length, beam),
+    ...mainTurret(length * 0.2, 3.4, 1),
+    ...mainTurret(length * 0.33, 3.4, 1),
+    ...mainTurret(length * 0.83, 3.2, -1),
+    rect('tower', length * 0.41, MID - 5.4, length * 0.09, 10.8, 1.6),
+    rect('tower', length * 0.43, MID - 3.4, length * 0.05, 6.8, 1.2),
+    ...mast(length * 0.46),
+    ...funnel(length * 0.55, 3.3),
+    ...funnel(length * 0.65, 3),
+    rect('detail', length * 0.72, MID - 4.4, length * 0.05, 8.8, 1.4),
+    ...secondaries(length, [0.5, 0.6, 0.71], beam - 3.4),
+    ...boats(length, [0.62, 0.68], beam - 2.2),
   ];
 }
 
-/** Cruiser: leaner hull with two turrets and a slim superstructure. */
+/** Cruiser: leaner hull, two turrets, single funnel and a slim bridge. */
 function buildCruiser(length) {
+  const beam = 8.2;
+
   return [
-    hull(length),
-    path('line', `M 6 ${MID} H ${length - 8}`),
-    turret(length * 0.24, 3.2),
-    turret(length * 0.76, 3),
-    rect('tower', length * 0.42, 7.5, length * 0.16, 9, 2),
+    ...warshipHull(length, beam),
+    ...mainTurret(length * 0.24, 3, 1),
+    ...mainTurret(length * 0.81, 2.8, -1),
+    rect('tower', length * 0.41, MID - 4.6, length * 0.11, 9.2, 1.6),
+    rect('tower', length * 0.44, MID - 2.8, length * 0.06, 5.6, 1.2),
+    ...mast(length * 0.48),
+    ...funnel(length * 0.61, 3),
+    rect('detail', length * 0.69, MID - 3.6, length * 0.06, 7.2, 1.2),
+    ...secondaries(length, [0.55, 0.7], beam - 3),
+    ...boats(length, [0.66], beam - 2),
   ];
 }
 
-/** Submarine: narrow pressure hull, conning tower and stern planes. */
+/** Submarine: pressure hull, conning tower with periscopes, planes and screw. */
 function buildSubmarine(length) {
+  const beam = 6.6;
+  const nose = length * 0.12;
+
   return [
     path(
       'hull',
-      `M 4 ${MID} C 4 8 7 6.5 11 6.5 L ${length - 12} 6.5 C ${length - 6} 7.5 ${length - 2.5} 9.5 ${length - 2} ${MID} C ${length - 2.5} 14.5 ${length - 6} 16.5 ${length - 12} 17.5 L 11 17.5 C 7 17.5 4 16 4 ${MID} Z`,
+      `M ${length - 1.5} ${MID}
+       C ${length - 1.5} ${MID - beam * 0.8} ${length - nose} ${MID - beam} ${length - nose * 1.5} ${MID - beam}
+       L ${length * 0.34} ${MID - beam}
+       C ${length * 0.17} ${MID - beam * 0.85} ${length * 0.05} ${MID - beam * 0.3} 2.2 ${MID}
+       C ${length * 0.05} ${MID + beam * 0.3} ${length * 0.17} ${MID + beam * 0.85} ${length * 0.34} ${MID + beam}
+       L ${length - nose * 1.5} ${MID + beam}
+       C ${length - nose} ${MID + beam} ${length - 1.5} ${MID + beam * 0.8} ${length - 1.5} ${MID} Z`,
     ),
-    path('fin', `M 5 3 L 12 8 L 12 16 L 5 21 Z`),
-    rect('tower', length * 0.4, 8, length * 0.14, 8, 2),
-    path('line', `M ${length * 0.47} 2.5 V 8`),
+    rect('fin', length * 0.6, MID - 8.4, length * 0.06, 2.8, 0.8),
+    rect('fin', length * 0.6, MID + 5.6, length * 0.06, 2.8, 0.8),
+    rect('fin', length * 0.07, MID - 7.6, length * 0.06, 2.6, 0.8),
+    rect('fin', length * 0.07, MID + 5, length * 0.06, 2.6, 0.8),
+    line(`M ${length * 0.05} ${MID - 5.4} V ${MID + 5.4}`),
+    dot(2.6, MID, 1.1),
+    rect('tower', length * 0.42, MID - 3.2, length * 0.14, 6.4, 2.4),
+    rect('detail', length * 0.46, MID - 1.6, length * 0.05, 3.2, 1),
+    line(`M ${length * 0.5} ${MID - 5} V ${MID + 5}`),
+    line(`M ${length * 0.14} ${MID} H ${length - nose * 1.2}`, 'line--dashed'),
+    dot(length * 0.68, MID, 1),
+    dot(length * 0.3, MID, 1),
   ];
 }
 
-/** Destroyer: compact agile hull with a single turret and small bridge. */
+/** Destroyer: compact hull, one forward turret, funnel and stern racks. */
 function buildDestroyer(length) {
+  const beam = 7;
+
   return [
-    hull(length),
-    path('line', `M 6 ${MID} H ${length - 8}`),
-    turret(length * 0.28, 3),
-    rect('tower', length * 0.48, 8, length * 0.2, 8, 2),
+    ...warshipHull(length, beam),
+    ...mainTurret(length * 0.28, 2.8, 1),
+    rect('tower', length * 0.44, MID - 4, length * 0.14, 8, 1.6),
+    ...mast(length * 0.52),
+    ...funnel(length * 0.64, 2.8),
+    rect('detail', length * 0.76, MID - 3, length * 0.08, 6, 1.2),
+    ...secondaries(length, [0.72], beam - 2.8),
+    rect('detail', length * 0.06, MID - 3.4, length * 0.05, 2.6, 0.8),
+    rect('detail', length * 0.06, MID + 0.8, length * 0.05, 2.6, 0.8),
   ];
 }
 
-/** Shared surface hull: rounded stern, raked bow to the right. */
-function hull(length) {
+/** Surface warship body: hull, planked deck and deck edge lines. */
+function warshipHull(length, beam) {
+  const bow = Math.min(22, length * 0.3);
+  const stern = Math.min(12, length * 0.2);
+
+  return [
+    hullPath('hull', 1.4, length - 1, beam, bow, stern),
+    hullPath('deck', 3.4, length - 4.5, beam - 1.9, bow * 0.85, stern * 0.8),
+    line(`M ${stern} ${MID - beam + 3.6} H ${length - bow * 0.9}`),
+    line(`M ${stern} ${MID + beam - 3.6} H ${length - bow * 0.9}`),
+  ];
+}
+
+/**
+ * Hull outline with a raked bow to the right and a tapered stern to the left.
+ *
+ * @param {string} part - Class suffix, so hull and deck share the geometry.
+ */
+function hullPath(part, x0, x1, beam, bow, stern) {
   return path(
-    'hull',
-    `M 3 ${MID} C 3 5.5 5.5 3.5 9 3.5 L ${length - 11} 3.5 C ${length - 6} 4.5 ${length - 3} 8 ${length - 2} ${MID} C ${length - 3} 16 ${length - 6} 19.5 ${length - 11} 20.5 L 9 20.5 C 5.5 20.5 3 18.5 3 ${MID} Z`,
+    part,
+    `M ${x1} ${MID}
+     C ${x1 - bow * 0.35} ${MID - beam * 0.6} ${x1 - bow * 0.8} ${MID - beam} ${x1 - bow} ${MID - beam}
+     L ${x0 + stern} ${MID - beam}
+     C ${x0 + stern * 0.35} ${MID - beam} ${x0} ${MID - beam * 0.6} ${x0} ${MID}
+     C ${x0} ${MID + beam * 0.6} ${x0 + stern * 0.35} ${MID + beam} ${x0 + stern} ${MID + beam}
+     L ${x1 - bow} ${MID + beam}
+     C ${x1 - bow * 0.8} ${MID + beam} ${x1 - bow * 0.35} ${MID + beam * 0.6} ${x1} ${MID} Z`,
   );
 }
 
-function turret(x, radius) {
+/** Twin main turret: barbette, gunhouse and two barrels facing `direction`. */
+function mainTurret(x, radius, direction) {
+  const barrel = radius * 2.2;
+  const root = direction > 0 ? x + radius * 0.4 : x - radius * 0.4 - barrel;
+
+  return [
+    element('circle', {
+      class: 'ship-shape__turret',
+      cx: String(x),
+      cy: String(MID),
+      r: String(radius),
+    }),
+    rect('barrel', root, MID - radius * 0.62, barrel, 1.1, 0.5),
+    rect('barrel', root, MID + radius * 0.62 - 1.1, barrel, 1.1, 0.5),
+    rect('gunhouse', x - radius * 0.7, MID - radius * 0.62, radius * 1.4, radius * 1.24, 0.8),
+  ];
+}
+
+/** Funnel with its cap band. */
+function funnel(x, radius) {
+  return [
+    rect('funnel', x - radius * 0.6, MID - radius, radius * 1.2, radius * 2, radius * 0.5),
+    rect('detail', x - radius * 0.3, MID - radius * 0.5, radius * 0.6, radius, radius * 0.3),
+  ];
+}
+
+/** Lattice mast: pole plus yardarm. */
+function mast(x) {
+  return [line(`M ${x} ${MID - 6.4} V ${MID + 6.4}`), line(`M ${x - 1.6} ${MID} H ${x + 1.6}`)];
+}
+
+/** Secondary mounts mirrored along both sides of the deck. */
+function secondaries(length, positions, offset) {
+  return positions.flatMap((ratio) => [
+    dot(length * ratio, MID - offset, 1.3),
+    dot(length * ratio, MID + offset, 1.3),
+  ]);
+}
+
+/** Ship's boats stowed amidships on both sides. */
+function boats(length, positions, offset) {
+  return positions.flatMap((ratio) => [
+    rect('detail', length * ratio, MID - offset - 1, length * 0.035, 2, 0.9),
+    rect('detail', length * ratio, MID + offset - 1, length * 0.035, 2, 0.9),
+  ]);
+}
+
+/** Parked aircraft: fuselage, wings and tailplane. */
+function plane(x, y) {
+  return [
+    rect('plane', x - 3, y - 0.8, 6.4, 1.6, 0.7),
+    rect('plane', x - 0.7, y - 3.4, 1.5, 6.8, 0.6),
+    rect('plane', x - 2.8, y - 1.9, 1.2, 3.8, 0.5),
+  ];
+}
+
+function dot(x, y, radius) {
   return element('circle', {
-    class: 'ship-shape__turret',
+    class: 'ship-shape__mount',
     cx: String(x),
-    cy: String(MID),
+    cy: String(y),
     r: String(radius),
   });
 }
@@ -133,6 +259,16 @@ function rect(part, x, y, width, height, radius) {
     height: String(height),
     rx: String(radius),
   });
+}
+
+function line(d, modifier = '') {
+  const node = path('line', d);
+
+  if (modifier) {
+    node.setAttribute('class', `ship-shape__line ship-shape__${modifier}`);
+  }
+
+  return node;
 }
 
 function path(part, d) {
