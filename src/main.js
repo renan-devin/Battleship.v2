@@ -34,6 +34,11 @@ import { paintFleetRoster, renderFleetRoster } from './ui/fleet.js';
 
 const ENEMY_TURN_DELAY_MS = 700;
 
+const DIFFICULTY_LABELS = {
+  easy: 'Easy opponent: random fire',
+  hard: 'Hard opponent: hunts your fleet',
+};
+
 function mount() {
   const playerBoard = document.querySelector('#player-board');
   const enemyBoard = document.querySelector('#enemy-board');
@@ -47,6 +52,7 @@ function mount() {
   const resetButton = document.querySelector('#reset');
   const startButton = document.querySelector('#start-battle');
   const difficultySelect = document.querySelector('#difficulty');
+  const difficultyBadge = document.querySelector('#difficulty-badge');
   const result = document.querySelector('#result');
   const resultTitle = document.querySelector('#result-title');
   const resultDetail = document.querySelector('#result-detail');
@@ -113,6 +119,12 @@ function mount() {
 
     if (difficultySelect) {
       difficultySelect.disabled = !placing;
+      difficultySelect.value = state.difficulty;
+    }
+
+    if (difficultyBadge) {
+      difficultyBadge.dataset.difficulty = state.difficulty;
+      difficultyBadge.textContent = DIFFICULTY_LABELS[state.difficulty];
     }
 
     if (fleetHint) {
@@ -377,7 +389,14 @@ function mount() {
   document.querySelector('#result-restart')?.addEventListener('click', newGame);
 
   difficultySelect?.addEventListener('change', (event) => {
-    update(setDifficulty(state, event.target.value), `Difficulty set to ${event.target.value}.`);
+    const nextState = setDifficulty(state, event.target.value);
+
+    if (nextState === state) {
+      render();
+      return;
+    }
+
+    update(nextState, `${DIFFICULTY_LABELS[nextState.difficulty]}.`);
   });
 
   render();
