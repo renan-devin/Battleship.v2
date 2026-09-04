@@ -3,8 +3,10 @@
 Browser implementation of the classic Battleship game, built with vanilla JavaScript
 (ES modules) and Vite.
 
-This repository currently contains the project foundation and a static, navigable UI:
-two 10x10 grids, native button controls and a difficulty selector. No game logic yet.
+The game currently covers the placement phase: pick a ship from the fleet roster, press
+`R` (or the orientation button) to rotate it and click a cell on your board to deploy it.
+`Random` deploys the whole fleet, `Reset` clears the board and clicking a placed ship takes
+it back. Firing at the enemy board is not implemented yet.
 
 ## Requirements
 
@@ -37,6 +39,12 @@ src/
   ai/       Opponent strategies (pure logic, no DOM)
   state/    Orchestration between engine, AI and UI (pure logic, no DOM)
   ui/       DOM rendering helpers
-  main.js   Entry point that mounts the base UI
+  main.js   Entry point that wires state, engine and DOM
 tests/      Vitest test suite
+docs/       Debugging report
 ```
+
+## Placement rules
+
+Ships must stay inside the board, must not overlap and can only be placed horizontally or
+vertically. Ships may touch each other, side by side or diagonally.
