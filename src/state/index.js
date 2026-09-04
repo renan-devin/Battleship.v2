@@ -164,6 +164,10 @@ export function randomizePlacements(state, random) {
  * @returns {object} Empty board, keeping the chosen difficulty.
  */
 export function resetPlacements(state) {
+  if (state.phase !== 'placement') {
+    return state;
+  }
+
   return startNewGame(state);
 }
 

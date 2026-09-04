@@ -302,7 +302,7 @@ button.ship:hover {
   transition: background-color var(--duration-medium) ease;
 }
 
-.ship__pip--hit {
+.ship .ship__pip--hit {
   background-color: var(--color-alert);
 }
 

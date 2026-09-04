@@ -8,6 +8,7 @@ import {
   isBattleActive,
   isGameOver,
   randomizePlacements,
+  resetPlacements,
   startBattle,
   startNewGame,
 } from '../src/state/index.js';
@@ -145,5 +146,6 @@ describe('placement actions during the battle', () => {
     const state = battleState();
 
     expect(randomizePlacements(state)).toBe(state);
+    expect(resetPlacements(state)).toBe(state);
   });
 });
