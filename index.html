@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Battleship</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>Battleship</h1>
+    </header>
+
+    <main class="app-main">
+      <section class="controls" aria-label="Game controls">
+        <button type="button" id="new-game">New Game</button>
+        <button type="button" id="random">Random</button>
+        <button type="button" id="reset">Reset</button>
+
+        <label class="difficulty" for="difficulty">
+          Difficulty
+          <select id="difficulty" name="difficulty">
+            <option value="easy" selected>Easy</option>
+            <option value="hard">Hard</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="status" aria-label="Game status">
+        <p id="status-message" aria-live="polite"></p>
+      </section>
+
+      <div class="boards">
+        <section class="board-panel" aria-labelledby="player-board-title">
+          <h2 id="player-board-title">Your fleet</h2>
+          <div
+            class="board"
+            id="player-board"
+            role="group"
+            aria-labelledby="player-board-title"
+          ></div>
+        </section>
+
+        <section class="board-panel" aria-labelledby="enemy-board-title">
+          <h2 id="enemy-board-title">Enemy waters</h2>
+          <div
+            class="board"
+            id="enemy-board"
+            role="group"
+            aria-labelledby="enemy-board-title"
+          ></div>
+        </section>
+      </div>
+    </main>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
