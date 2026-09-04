@@ -42,3 +42,26 @@ overlap`.
   the cell hover state silently fell back to the previous value.
 - **Detection:** re-reading the design tokens after adding them.
 - **Fix:** corrected the token to `#1f5b82` and used it in the `.cell:hover` rule.
+
+## Phase 3 - combat
+
+### 1. `fireAt` crashed on targets outside the board
+
+- **Symptom:** `fireAt` indexed the occupancy grid directly, so a target such as
+  `{ row: 10, column: 0 }` or `{ row: 1.5, column: 0 }` threw a `TypeError` instead of being
+  rejected. Reachable from any caller that does not pre-validate coordinates.
+- **Detection:** code review of the new engine module before wiring it to the UI.
+- **Fix:** `fireAt` validates the target with `isWithinBounds` and returns
+  `result: 'invalid'` with the shot history untouched; `fireAtEnemy` only accepts `hit` and
+  `miss` outcomes. Covered by `fireAt > rejects targets outside the board instead of
+crashing` and `fireAtEnemy > ignores targets outside the board`.
+
+### 2. Disabling cells during the enemy turn dropped keyboard focus
+
+- **Symptom:** the first wiring disabled the whole enemy board while the AI was firing and
+  the player board during the battle. A disabled button loses focus, so a keyboard player was
+  thrown back to the top of the document every turn and could not review their own board.
+- **Detection:** keyboard walkthrough of the combat loop.
+- **Fix:** cells stay focusable; only cells that were already fired at (and the enemy board
+  outside the battle) are disabled. Out-of-turn clicks are ignored and announced in the
+  `aria-live` region instead.
