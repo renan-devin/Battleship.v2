@@ -8,7 +8,7 @@ two 10x10 grids, native button controls and a difficulty selector. No game logic
 
 ## Requirements
 
-- Node.js 18 or newer
+- Node.js 18.18 or newer
 - npm 9 or newer
 
 ## Getting started
