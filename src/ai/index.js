@@ -72,21 +72,22 @@ export function getSunkShipIdsFromShots(shots) {
  * Hits that belong to a ship still afloat, oldest first.
  *
  * @param {Array<object>} shots
- * @returns {Array<{ row: number, column: number }>}
+ * @returns {Array<{ row: number, column: number, shipId: string }>}
  */
 export function getUnresolvedHits(shots) {
   const sunk = getSunkShipIdsFromShots(shots);
 
   return shots
     .filter((shot) => shot.hit && !sunk.has(shot.shipId))
-    .map((shot) => ({ row: shot.row, column: shot.column }));
+    .map((shot) => ({ row: shot.row, column: shot.column, shipId: shot.shipId }));
 }
 
 /**
  * Cells worth firing at while a damaged ship is still afloat: the gap between
  * two aligned hits when there is one, otherwise the ends of the inferred line,
  * otherwise the orthogonal neighbours of a lone hit. Only the best tier is
- * returned, so a lower-priority cell never competes with a gap.
+ * returned, so a lower-priority cell never competes with a gap. Hits are
+ * matched per ship, so two damaged ships never fake a line between them.
  *
  * @param {Array<object>} shots
  * @returns {Array<{ row: number, column: number }>} Empty when nothing is damaged.
@@ -98,7 +99,9 @@ export function getTargetCandidates(shots) {
     return [];
   }
 
-  const unresolvedKeys = new Set(unresolved.map(({ row, column }) => toKey(row, column)));
+  const damagedShipByKey = new Map(
+    unresolved.map(({ row, column, shipId }) => [toKey(row, column), shipId]),
+  );
   const firedKeys = new Set(shots.map(({ row, column }) => toKey(row, column)));
 
   const gaps = new Map();
@@ -113,7 +116,7 @@ export function getTargetCandidates(shots) {
     while (isOnBoard(row, column)) {
       const key = toKey(row, column);
 
-      if (unresolvedKeys.has(key)) {
+      if (damagedShipByKey.get(key) === hit.shipId) {
         return { openCells, closedByHit: true };
       }
 

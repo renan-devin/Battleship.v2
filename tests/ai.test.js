@@ -79,7 +79,7 @@ describe('getUnresolvedHits', () => {
       { row: 4, column: 4 },
     ]);
 
-    expect(getUnresolvedHits(shots)).toEqual([{ row: 4, column: 4 }]);
+    expect(getUnresolvedHits(shots)).toEqual([{ row: 4, column: 4, shipId: 'destroyer' }]);
 
     const sunk = fireAt(DESTROYER_ON_ROW_5, shots, { row: 4, column: 5 }).shots;
 
@@ -111,6 +111,26 @@ describe('getTargetCandidates', () => {
     ]);
 
     expect(getTargetCandidates(shots)).toEqual([{ row: 8, column: 0 }]);
+  });
+
+  it('does not read a gap between two different damaged ships', () => {
+    const placements = [
+      { shipId: 'destroyer', row: 6, column: 0, orientation: 'vertical' },
+      { shipId: 'cruiser', row: 9, column: 0, orientation: 'horizontal' },
+    ];
+    const shots = fireAll(placements, [
+      { row: 6, column: 0 },
+      { row: 9, column: 0 },
+    ]);
+    // The cells between the two contacts stay plain neighbours: without the
+    // per-ship match they would outrank the neighbours of both hits.
+    expect(getTargetCandidates(shots)).toEqual([
+      { row: 7, column: 0 },
+      { row: 5, column: 0 },
+      { row: 6, column: 1 },
+      { row: 8, column: 0 },
+      { row: 9, column: 1 },
+    ]);
   });
 
   it('follows the ends of an inferred line', () => {
