@@ -42,7 +42,13 @@ export function getShipCells(placement) {
  */
 export function isWithinBounds(cells) {
   return cells.every(
-    ({ row, column }) => row >= 0 && row < BOARD_SIZE && column >= 0 && column < BOARD_SIZE,
+    ({ row, column }) =>
+      Number.isInteger(row) &&
+      Number.isInteger(column) &&
+      row >= 0 &&
+      row < BOARD_SIZE &&
+      column >= 0 &&
+      column < BOARD_SIZE,
   );
 }
 

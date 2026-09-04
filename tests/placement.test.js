@@ -117,6 +117,10 @@ describe('canPlaceShip', () => {
     expect(canPlaceShip(placements, carrierAt(0, 1))).toBe(true);
   });
 
+  it('rejects fractional coordinates', () => {
+    expect(canPlaceShip([], carrierAt(0.5, 0))).toBe(false);
+  });
+
   it('rejects unknown orientations', () => {
     expect(canPlaceShip([], carrierAt(0, 0, 'diagonal'))).toBe(false);
   });
