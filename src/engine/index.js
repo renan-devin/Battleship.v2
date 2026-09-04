@@ -16,3 +16,11 @@ export {
   placeShipsRandomly,
   removeShip,
 } from './placement.js';
+export {
+  fireAt,
+  getShipHitCount,
+  getSunkShipIds,
+  hasBeenShot,
+  isFleetDestroyed,
+  isShipSunk,
+} from './combat.js';
