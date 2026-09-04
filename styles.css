@@ -350,11 +350,12 @@ button.ship:hover {
     transform var(--duration-fast) var(--ease-out);
 }
 
-.cell:disabled {
+.cell:disabled,
+.cell[aria-disabled='true'] {
   cursor: default;
 }
 
-.cell:hover:not(:disabled) {
+.cell:hover:not(:disabled):not([aria-disabled='true']) {
   background-color: var(--color-water-hover);
   transform: scale(1.06);
 }
@@ -517,7 +518,7 @@ button.ship:hover {
     transition-duration: 0.01ms !important;
   }
 
-  .cell:hover:not(:disabled) {
+  .cell:hover:not(:disabled):not([aria-disabled='true']) {
     transform: none;
   }
 }

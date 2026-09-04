@@ -275,6 +275,7 @@ function mount() {
     const nextState = fireAtEnemy(state, target);
 
     if (nextState === state) {
+      announce(`You already fired at ${formatCoordinate(target.row, target.column)}.`);
       return;
     }
 

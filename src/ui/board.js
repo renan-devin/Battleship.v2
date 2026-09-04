@@ -114,6 +114,9 @@ export function paintPlayerBoard(cells, placements, options = {}) {
  * @param {Array<object>} placements - Enemy ships, used only to reveal sunk ones.
  * @param {Array<object>} shots - Shots the player fired at this board.
  * @param {boolean} inBattle - Untouched cells only accept fire during the battle.
+ *
+ * Cells already fired at keep the `disabled` attribute off and use
+ * `aria-disabled` instead, so pressing Enter never drops keyboard focus.
  */
 export function paintEnemyBoard(cells, placements, shots, inBattle) {
   const shotsByCell = indexShots(shots);
@@ -130,7 +133,13 @@ export function paintEnemyBoard(cells, placements, shots, inBattle) {
     cell.classList.toggle('cell--hit', Boolean(shot?.hit));
     cell.classList.toggle('cell--miss', Boolean(shot) && !shot.hit);
     cell.classList.toggle('cell--sunk', sunk);
-    cell.disabled = !inBattle || Boolean(shot);
+    cell.disabled = !inBattle;
+
+    if (shot) {
+      cell.setAttribute('aria-disabled', 'true');
+    } else {
+      cell.removeAttribute('aria-disabled');
+    }
 
     cell.setAttribute(
       'aria-label',
