@@ -31,7 +31,7 @@ export function createShipSilhouette(shipId, size, options = {}) {
   svg.style.setProperty('--ship-length', String(size));
 
   const group = element('g', vertical ? { transform: `translate(${UNIT} 0) rotate(90)` } : {});
-  group.append(...(SHAPES[shipId] ?? SHAPES.destroyer)(length));
+  group.append(...(SHAPES[shipId] ?? SHAPES.destroyer)(length), damage(length));
   svg.append(group);
 
   return svg;
@@ -230,6 +230,52 @@ function boats(length, positions, offset) {
     rect('detail', length * ratio, MID - offset - 1, length * 0.035, 2, 0.9),
     rect('detail', length * ratio, MID + offset - 1, length * 0.035, 2, 0.9),
   ]);
+}
+
+/**
+ * Battle damage revealed only once the ship is sunk: soot smudges along the
+ * hull plus two fires. Kept in one group so CSS can toggle the whole layer.
+ */
+function damage(length) {
+  const group = element('g', { class: 'ship-shape__damage' });
+
+  group.append(
+    scorch(length * 0.22, MID - 1.6, 4.6, 3.4),
+    scorch(length * 0.52, MID + 1.8, 5.4, 3.8),
+    scorch(length * 0.82, MID - 1, 4.2, 3.2),
+    ...flame(length * 0.34, MID, 3.4),
+    ...flame(length * 0.68, MID, 2.8),
+  );
+
+  return group;
+}
+
+function scorch(x, y, rx, ry) {
+  return element('ellipse', {
+    class: 'ship-shape__scorch',
+    cx: String(x),
+    cy: String(y),
+    rx: String(rx),
+    ry: String(ry),
+  });
+}
+
+/** Burning breach: radial so it reads the same in both orientations. */
+function flame(x, y, size) {
+  return [
+    element('circle', {
+      class: 'ship-shape__fire',
+      cx: String(x),
+      cy: String(y),
+      r: String(size),
+    }),
+    element('circle', {
+      class: 'ship-shape__fire-core',
+      cx: String(x),
+      cy: String(y),
+      r: String(size * 0.5),
+    }),
+  ];
 }
 
 /** Parked aircraft: fuselage, wings and tailplane. */

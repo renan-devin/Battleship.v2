@@ -570,13 +570,13 @@ h3 {
 }
 
 .board__ship--sunk {
-  opacity: 0.45;
+  opacity: 0.5;
   filter: none;
   animation: sink var(--duration-medium) var(--ease-out);
 }
 
 .board__ship--sunk svg {
-  color: #f4e3e3;
+  color: #e3e8ec;
 }
 
 .ship-shape__hull {
@@ -586,7 +586,7 @@ h3 {
 }
 
 .ship-shape__deck {
-  fill: color-mix(in srgb, currentcolor 35%, #cbab74);
+  fill: color-mix(in srgb, currentcolor 30%, #33556e);
 }
 
 .ship-shape__flightdeck {
@@ -627,7 +627,39 @@ h3 {
 }
 
 .board__ship--sunk .ship-shape__deck {
-  fill: color-mix(in srgb, currentcolor 55%, var(--color-abyss));
+  fill: #b9c0c5;
+}
+
+.board__ship--sunk .ship-shape__hull {
+  fill: #8e979d;
+  stroke: #6a7379;
+}
+
+.board__ship--sunk .ship-shape__flightdeck {
+  fill: #9aa3a9;
+}
+
+/* Battle damage rides with the hull and only shows on a sunk ship. */
+.ship-shape__damage {
+  opacity: 0;
+}
+
+.board__ship--sunk .ship-shape__damage,
+.ship--sunk .ship-shape__damage {
+  opacity: 1;
+}
+
+.ship-shape__scorch {
+  fill: #14181c;
+  opacity: 0.7;
+}
+
+.ship-shape__fire {
+  fill: #f08a2c;
+}
+
+.ship-shape__fire-core {
+  fill: #ffe08a;
 }
 
 /* Outranks the hover rule so the cell under the cursor shows the preview. */
