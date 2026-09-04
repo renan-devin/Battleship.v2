@@ -19,7 +19,7 @@ import {
 } from '../engine/index.js';
 
 export const STORAGE_KEY = 'battleship.v2.match';
-export const STORAGE_VERSION = 1;
+export const STORAGE_VERSION = 2;
 
 const PHASES = ['placement', 'battle', 'victory', 'defeat'];
 const SHIP_IDS = FLEET.map((ship) => ship.id);

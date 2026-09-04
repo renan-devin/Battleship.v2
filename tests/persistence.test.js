@@ -263,6 +263,18 @@ describe('corrupted saves', () => {
     expect(storage.size).toBe(0);
   });
 
+  it('discards a save written by an earlier version and starts clean', () => {
+    const legacy = JSON.stringify({ version: 1, state: battleState() });
+    const storage = createStorage({ [STORAGE_KEY]: legacy });
+
+    expect(loadState(storage)).toBeNull();
+    expect(storage.size).toBe(0);
+
+    saveState(storage, createInitialState());
+
+    expect(loadState(storage)).toEqual(createInitialState());
+  });
+
   it('drops a malformed last shot but keeps the match', () => {
     const storage = createStorage();
 
