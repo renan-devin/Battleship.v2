@@ -3,10 +3,20 @@
 Browser implementation of the classic Battleship game, built with vanilla JavaScript
 (ES modules) and Vite.
 
-The game currently covers the placement phase: pick a ship from the fleet roster, press
-`R` (or the orientation button) to rotate it and click a cell on your board to deploy it.
-`Random` deploys the whole fleet, `Reset` clears the board and clicking a placed ship takes
-it back. Firing at the enemy board is not implemented yet.
+## How to play
+
+1. **Deploy.** Pick a ship from the fleet roster, press `R` (or the orientation button) to
+   rotate it and click a cell on your board. `Random` deploys the whole fleet, `Reset`
+   clears the board and clicking a placed ship takes it back.
+2. **Fight.** Press `Start Battle` once the fleet is ready and click a cell on the enemy
+   board to fire. Misses show a sonar ring, hits a burning cross, and a ship is revealed
+   when it sinks. The enemy answers on the easy strategy (random untouched cell) after a
+   short delay.
+3. **Finish.** The battle ends as soon as one of the fleets is completely sunk; the battle
+   report offers a new game.
+
+The status bar shows whose turn it is and the outcome of the last shot, and mirrors both to
+an `aria-live` region.
 
 ## Requirements
 

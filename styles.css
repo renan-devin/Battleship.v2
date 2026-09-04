@@ -41,6 +41,12 @@
   --shadow-panel: 0 10px 30px rgb(2 10 18 / 45%);
 
   --cell-size: 2rem;
+  --label-size: 1.25rem;
+
+  /* Motion: disabled wholesale by the reduced motion query at the end. */
+  --duration-fast: 120ms;
+  --duration-medium: 260ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 * {
@@ -111,9 +117,37 @@ h2 {
   cursor: pointer;
 }
 
-.controls button:hover,
-.difficulty select:hover {
+.controls button:hover:not(:disabled),
+.difficulty select:hover:not(:disabled) {
   background-color: var(--color-hull-strong);
+}
+
+.controls button {
+  transition:
+    background-color var(--duration-fast) ease,
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.controls button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.controls button:disabled,
+.difficulty select:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.button--primary {
+  color: var(--color-abyss);
+  background-color: var(--color-sonar);
+  border-color: transparent;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.button--primary:hover:not(:disabled) {
+  background-color: #63e6d4;
 }
 
 .difficulty {
@@ -124,6 +158,10 @@ h2 {
 }
 
 .status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-4);
   min-height: 1.5rem;
   padding: var(--space-2) var(--space-4);
   background-color: rgb(18 48 73 / 55%);
@@ -133,6 +171,26 @@ h2 {
 
 .status p {
   margin: 0;
+}
+
+.status__turn {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-sonar);
+}
+
+.status__turn[data-turn='enemy'] {
+  color: var(--color-signal);
+}
+
+.status__turn[data-phase='victory'] {
+  color: var(--color-sonar);
+}
+
+.status__turn[data-phase='defeat'] {
+  color: var(--color-alert);
 }
 
 .layout {
@@ -166,6 +224,10 @@ h2 {
   border-radius: var(--radius-sm);
 }
 
+.fleet-panel__subtitle {
+  margin-top: var(--space-5);
+}
+
 .fleet-roster {
   display: flex;
   flex-direction: column;
@@ -186,8 +248,21 @@ h2 {
   cursor: pointer;
 }
 
-.ship:hover {
+button.ship:hover {
   background-color: var(--color-hull-strong);
+}
+
+.ship--sunk {
+  border-color: var(--color-alert);
+  opacity: 0.7;
+}
+
+.ship--sunk .ship__name {
+  text-decoration: line-through;
+}
+
+.ship--sunk .ship__status {
+  color: var(--color-alert);
 }
 
 .ship--selected {
@@ -224,6 +299,11 @@ h2 {
   height: 0.375rem;
   background-color: var(--color-steel);
   border-radius: 1px;
+  transition: background-color var(--duration-medium) ease;
+}
+
+.ship .ship__pip--hit {
+  background-color: var(--color-alert);
 }
 
 .boards {
@@ -234,16 +314,30 @@ h2 {
 
 .board {
   display: grid;
-  grid-template-columns: repeat(10, var(--cell-size));
-  grid-template-rows: repeat(10, var(--cell-size));
+  grid-template-columns: var(--label-size) repeat(10, var(--cell-size));
+  grid-template-rows: var(--label-size) repeat(10, var(--cell-size));
   gap: 2px;
-  padding: 2px;
+  padding: var(--space-2);
+  background:
+    linear-gradient(rgb(6 24 39 / 60%), rgb(6 24 39 / 60%)),
+    repeating-linear-gradient(45deg, transparent 0 6px, rgb(70 213 194 / 4%) 6px 12px);
   background-color: var(--color-hull);
   border: var(--border-hairline);
   border-radius: var(--radius-md);
+  box-shadow: var(--shadow-panel);
+}
+
+.board__label,
+.board__corner {
+  display: grid;
+  place-items: center;
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
 }
 
 .cell {
+  position: relative;
   width: var(--cell-size);
   height: var(--cell-size);
   padding: 0;
@@ -251,26 +345,181 @@ h2 {
   border: 1px solid var(--color-deep);
   border-radius: 2px;
   cursor: pointer;
+  transition:
+    background-color var(--duration-fast) ease,
+    transform var(--duration-fast) var(--ease-out);
 }
 
-.cell:hover {
+.cell:disabled,
+.cell[aria-disabled='true'] {
+  cursor: default;
+}
+
+.cell:hover:not(:disabled):not([aria-disabled='true']) {
   background-color: var(--color-water-hover);
+  transform: scale(1.06);
 }
 
+/* Ships are drawn in CSS: a steel hull whose ends are rounded by part. */
 .cell--ship {
-  background-color: var(--color-steel);
-  border-color: var(--color-text);
+  background: linear-gradient(180deg, #a9c6d9, var(--color-steel) 55%, #6f93ac);
+  border-color: rgb(232 242 250 / 60%);
 }
 
-.cell.cell--preview-valid {
-  background-color: var(--color-sonar);
+.cell--ship[data-ship-part='h-bow'] {
+  border-radius: 999px 3px 3px 999px;
 }
 
-.cell.cell--preview-invalid {
-  background-color: var(--color-alert);
+.cell--ship[data-ship-part='h-stern'] {
+  border-radius: 3px 999px 999px 3px;
+}
+
+.cell--ship[data-ship-part='v-bow'] {
+  border-radius: 999px 999px 3px 3px;
+}
+
+.cell--ship[data-ship-part='v-stern'] {
+  border-radius: 3px 3px 999px 999px;
+}
+
+/* Outranks the hover rule so the cell under the cursor shows the preview. */
+.cell.cell--preview-valid:not(:disabled):not([aria-disabled='true']) {
+  background: var(--color-sonar);
+}
+
+.cell.cell--preview-invalid:not(:disabled):not([aria-disabled='true']) {
+  background: var(--color-alert);
+}
+
+/* Shot markers: a sonar ring for a miss, a burning cross for a hit. */
+.cell--miss::after,
+.cell--hit::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+}
+
+.cell--miss::after {
+  width: 0.5rem;
+  height: 0.5rem;
+  border: 2px solid var(--color-steel);
+  border-radius: 50%;
+  animation: splash var(--duration-medium) var(--ease-out);
+}
+
+.cell.cell--hit {
+  background: radial-gradient(circle, #ff9d6c, var(--color-alert) 70%);
+  border-color: var(--color-signal);
+}
+
+.cell--hit::after {
+  width: 0.75rem;
+  height: 0.75rem;
+  background:
+    linear-gradient(45deg, transparent 44%, var(--color-abyss) 44% 56%, transparent 56%),
+    linear-gradient(-45deg, transparent 44%, var(--color-abyss) 44% 56%, transparent 56%);
+  animation: blast var(--duration-medium) var(--ease-out);
+}
+
+.cell.cell--sunk {
+  background: linear-gradient(180deg, #7d1f22, #4a1113);
+  border-color: var(--color-alert);
+  animation: sink var(--duration-medium) var(--ease-out);
+}
+
+@keyframes splash {
+  from {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+}
+
+@keyframes blast {
+  from {
+    transform: scale(1.8) rotate(-20deg);
+    opacity: 0;
+  }
+}
+
+@keyframes sink {
+  from {
+    transform: scale(1.15);
+  }
+}
+
+.result {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--space-5);
+  background-color: rgb(4 18 31 / 80%);
+}
+
+.result[hidden] {
+  display: none;
+}
+
+.result__card {
+  max-width: 24rem;
+  padding: var(--space-6);
+  text-align: center;
+  background: radial-gradient(circle at 50% 0%, var(--color-hull), var(--color-deep) 70%);
+  border: var(--border-hairline);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-panel);
+  animation: rise var(--duration-medium) var(--ease-out);
+}
+
+.result__eyebrow {
+  margin: 0 0 var(--space-2);
+  font-size: 0.75rem;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-sonar);
+}
+
+.result__title {
+  font-size: 1.5rem;
+  color: var(--color-text);
+}
+
+.result__detail {
+  margin: 0 0 var(--space-5);
+  color: var(--color-text-muted);
+}
+
+.result__card button {
+  padding: var(--space-2) var(--space-5);
+  font: inherit;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(1rem);
+    opacity: 0;
+  }
 }
 
 :focus-visible {
   outline: 3px solid var(--color-signal);
   outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .cell:hover:not(:disabled):not([aria-disabled='true']) {
+    transform: none;
+  }
 }

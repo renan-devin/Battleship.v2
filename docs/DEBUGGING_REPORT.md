@@ -42,3 +42,52 @@ overlap`.
   the cell hover state silently fell back to the previous value.
 - **Detection:** re-reading the design tokens after adding them.
 - **Fix:** corrected the token to `#1f5b82` and used it in the `.cell:hover` rule.
+
+## Phase 3 - combat
+
+### 1. `fireAt` crashed on targets outside the board
+
+- **Symptom:** `fireAt` indexed the occupancy grid directly, so a target such as
+  `{ row: 10, column: 0 }` or `{ row: 1.5, column: 0 }` threw a `TypeError` instead of being
+  rejected. Reachable from any caller that does not pre-validate coordinates.
+- **Detection:** code review of the new engine module before wiring it to the UI.
+- **Fix:** `fireAt` validates the target with `isWithinBounds` and returns
+  `result: 'invalid'` with the shot history untouched; `fireAtEnemy` only accepts `hit` and
+  `miss` outcomes. Covered by `fireAt > rejects targets outside the board instead of
+crashing` and `fireAtEnemy > ignores targets outside the board`.
+
+### 2. Disabling cells during the enemy turn dropped keyboard focus
+
+- **Symptom:** the first wiring disabled the whole enemy board while the AI was firing and
+  the player board during the battle. A disabled button loses focus, so a keyboard player was
+  thrown back to the top of the document every turn and could not review their own board.
+- **Detection:** keyboard walkthrough of the combat loop.
+- **Fix:** cells stay focusable; only the enemy board outside the battle is disabled.
+  Out-of-turn clicks are ignored and announced in the `aria-live` region instead.
+
+### 3. Firing with the keyboard dropped focus on the fired cell
+
+- **Symptom:** the cell that had just been fired at was re-rendered with the `disabled`
+  attribute, so after every `Enter`/`Space` shot the browser moved focus to `<body>` and a
+  keyboard player had to tab in from the top of the page again.
+- **Detection:** end-to-end keyboard run of a full match (`document.activeElement` was `BODY`
+  right after firing).
+- **Fix:** already fired cells now use `aria-disabled="true"` instead of `disabled`, so they
+  keep focus; repeated shots are rejected by the state layer and announced as `You already
+fired at C4.`
+
+### 4. Damage pips stayed green for placed ships
+
+- **Symptom:** `.ship--placed .ship__pip` outranked `.ship__pip--hit`, so both rosters kept
+  every pip green and the damage taken by a ship was invisible.
+- **Detection:** code review of the roster styles.
+- **Fix:** the hit rule is scoped to `.ship .ship__pip--hit` so it wins the specificity tie.
+
+### 5. `resetPlacements` erased an active match
+
+- **Symptom:** `resetPlacements` delegated to `startNewGame` unconditionally, so calling it
+  during a battle silently discarded the match instead of being ignored like the other
+  placement-only actions.
+- **Detection:** code review of the placement guards added for the battle phase.
+- **Fix:** `resetPlacements` returns the state untouched outside the `placement` phase.
+  Covered by `placement actions during the battle > are ignored`.
