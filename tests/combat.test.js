@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { ORIENTATIONS } from '../src/engine/constants.js';
 import {
   fireAt,
+  getFleetStatus,
   getShipHitCount,
   getSunkShipIds,
   hasBeenShot,
@@ -119,5 +120,35 @@ describe('shot history helpers', () => {
 
   it('does not consider an empty fleet destroyed', () => {
     expect(isFleetDestroyed([], [])).toBe(false);
+  });
+});
+
+describe('getFleetStatus', () => {
+  it('reports an untouched fleet as fully afloat', () => {
+    expect(getFleetStatus(placements, [])).toEqual({
+      total: 2,
+      afloat: 2,
+      sunk: 0,
+      damaged: 0,
+    });
+  });
+
+  it('separates damaged ships from sunk ones', () => {
+    const shots = fireAll([
+      { row: 0, column: 0 },
+      { row: 0, column: 1 },
+      { row: 5, column: 5 },
+    ]);
+
+    expect(getFleetStatus(placements, shots)).toEqual({
+      total: 2,
+      afloat: 1,
+      sunk: 1,
+      damaged: 1,
+    });
+  });
+
+  it('reports an empty fleet without ships afloat', () => {
+    expect(getFleetStatus([], [])).toEqual({ total: 0, afloat: 0, sunk: 0, damaged: 0 });
   });
 });

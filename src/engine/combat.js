@@ -73,6 +73,28 @@ export function isFleetDestroyed(placements, shots) {
 }
 
 /**
+ * Summarises how a fleet is holding up.
+ *
+ * @param {Array<object>} placements
+ * @param {Array<object>} shots
+ * @returns {{ total: number, afloat: number, sunk: number, damaged: number }}
+ */
+export function getFleetStatus(placements, shots) {
+  const sunkIds = new Set(getSunkShipIds(placements, shots));
+  const damaged = placements.filter(
+    (placement) =>
+      !sunkIds.has(placement.shipId) && getShipHitCount(placements, shots, placement.shipId) > 0,
+  ).length;
+
+  return {
+    total: placements.length,
+    afloat: placements.length - sunkIds.size,
+    sunk: sunkIds.size,
+    damaged,
+  };
+}
+
+/**
  * Fires at a board.
  *
  * @param {Array<object>} placements - Ships on the board being fired at.

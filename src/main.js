@@ -5,7 +5,13 @@
  * replies on its own after a short delay so the player can read the outcome.
  */
 
-import { ORIENTATIONS, canPlaceShip, getShipDefinition } from './engine/index.js';
+import {
+  FLEET,
+  ORIENTATIONS,
+  canPlaceShip,
+  getFleetStatus,
+  getShipDefinition,
+} from './engine/index.js';
 import {
   createInitialState,
   fireAtEnemy,
@@ -72,6 +78,8 @@ function mount() {
   const startButton = document.querySelector('#start-battle');
   const difficultySelect = document.querySelector('#difficulty');
   const difficultyBadge = document.querySelector('#difficulty-badge');
+  const playerStrength = document.querySelector('#player-strength');
+  const enemyStrength = document.querySelector('#enemy-strength');
   const resumeBadge = document.querySelector('#resume-badge');
   const result = document.querySelector('#result');
   const resultTitle = document.querySelector('#result-title');
@@ -160,6 +168,26 @@ function mount() {
     }
   }
 
+  function renderStrength() {
+    const placing = state.phase === 'placement';
+
+    if (playerStrength) {
+      const status = getFleetStatus(state.placements, state.enemyShots);
+      playerStrength.textContent = placing
+        ? `${state.placements.length}/${FLEET.length} deployed`
+        : `${status.afloat}/${status.total} afloat`;
+      playerStrength.dataset.critical = String(!placing && status.afloat <= 1);
+    }
+
+    if (enemyStrength) {
+      const status = getFleetStatus(state.enemyPlacements, state.playerShots);
+      enemyStrength.textContent = placing
+        ? 'Awaiting deployment'
+        : `${status.afloat}/${status.total} afloat`;
+      enemyStrength.dataset.critical = String(!placing && status.afloat <= 1);
+    }
+  }
+
   function renderTurn() {
     if (!turnIndicator) {
       return;
@@ -194,6 +222,7 @@ function mount() {
     }
 
     const victory = state.phase === 'victory';
+    result.dataset.outcome = victory ? 'victory' : 'defeat';
     resultTitle.textContent = victory ? 'Enemy fleet destroyed' : 'Your fleet is lost';
     resultDetail.textContent = victory
       ? `You sank every enemy ship in ${state.playerShots.length} shots.`
@@ -220,6 +249,7 @@ function mount() {
     });
 
     renderControls();
+    renderStrength();
     renderTurn();
     renderResult();
   }
@@ -244,8 +274,8 @@ function mount() {
     const attacker = shot.by === 'player' ? 'You' : 'The enemy';
 
     if (shot.sunkShipId) {
-      const owner = shot.by === 'player' ? 'Enemy' : 'Your';
-      return `${attacker} sank the ${owner} ${getShipDefinition(shot.sunkShipId).name} at ${coordinate}.`;
+      const owner = shot.by === 'player' ? 'the enemy' : 'your';
+      return `${attacker} sank ${owner} ${getShipDefinition(shot.sunkShipId).name} at ${coordinate}.`;
     }
 
     return `${attacker} ${shot.result === 'hit' ? 'hit' : 'missed'} at ${coordinate}.`;
