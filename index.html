@@ -8,6 +8,7 @@
   </head>
   <body>
     <header class="app-header">
+      <p class="app-header__eyebrow">Naval Command</p>
       <h1>Battleship</h1>
     </header>
 
@@ -16,6 +17,7 @@
         <button type="button" id="new-game">New Game</button>
         <button type="button" id="random">Random</button>
         <button type="button" id="reset">Reset</button>
+        <button type="button" id="orientation" aria-pressed="false">Orientation: Horizontal</button>
 
         <label class="difficulty" for="difficulty">
           Difficulty
@@ -30,26 +32,37 @@
         <p id="status-message" aria-live="polite"></p>
       </section>
 
-      <div class="boards">
-        <section class="board-panel" aria-labelledby="player-board-title">
-          <h2 id="player-board-title">Your fleet</h2>
-          <div
-            class="board"
-            id="player-board"
-            role="group"
-            aria-labelledby="player-board-title"
-          ></div>
+      <div class="layout">
+        <section class="fleet-panel" aria-labelledby="fleet-title">
+          <h2 id="fleet-title">Fleet</h2>
+          <p class="fleet-panel__hint">
+            Select a ship, press <kbd>R</kbd> to rotate and click a cell on your board. Click a
+            placed ship to take it back.
+          </p>
+          <div class="fleet-roster" id="fleet-roster"></div>
         </section>
 
-        <section class="board-panel" aria-labelledby="enemy-board-title">
-          <h2 id="enemy-board-title">Enemy waters</h2>
-          <div
-            class="board"
-            id="enemy-board"
-            role="group"
-            aria-labelledby="enemy-board-title"
-          ></div>
-        </section>
+        <div class="boards">
+          <section class="board-panel" aria-labelledby="player-board-title">
+            <h2 id="player-board-title">Your fleet</h2>
+            <div
+              class="board"
+              id="player-board"
+              role="group"
+              aria-labelledby="player-board-title"
+            ></div>
+          </section>
+
+          <section class="board-panel" aria-labelledby="enemy-board-title">
+            <h2 id="enemy-board-title">Enemy waters</h2>
+            <div
+              class="board"
+              id="enemy-board"
+              role="group"
+              aria-labelledby="enemy-board-title"
+            ></div>
+          </section>
+        </div>
       </div>
     </main>
 
