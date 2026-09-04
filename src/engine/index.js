@@ -18,6 +18,7 @@ export {
 } from './placement.js';
 export {
   fireAt,
+  getFleetStatus,
   getShipHitCount,
   getSunkShipIds,
   hasBeenShot,

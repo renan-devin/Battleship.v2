@@ -13,6 +13,7 @@ import {
   getSunkShipIds,
   ORIENTATIONS,
 } from '../engine/index.js';
+import { createShipSilhouette } from './ship-shapes.js';
 
 const COLUMN_LETTERS = 'ABCDEFGHIJ';
 
@@ -105,6 +106,8 @@ export function paintPlayerBoard(cells, placements, options = {}) {
       `Your fleet cell ${formatCoordinate(row, column)}${describeCell(shipId, shot, sunkIds)}`,
     );
   }
+
+  paintSilhouettes(cells, placements, sunkIds);
 }
 
 /**
@@ -146,6 +149,66 @@ export function paintEnemyBoard(cells, placements, shots, inBattle) {
       `Enemy waters cell ${formatCoordinate(row, column)}${describeCell(null, shot, sunkIds)}`,
     );
   }
+
+  paintSilhouettes(
+    cells,
+    placements.filter((placement) => sunkIds.has(placement.shipId)),
+    sunkIds,
+  );
+}
+
+/**
+ * Draws one silhouette per ship as a grid item spanning the cells it occupies.
+ * The overlay never takes pointer events, and hit, miss and focus states keep a
+ * higher stacking order so nothing they show is covered by a hull.
+ */
+function paintSilhouettes(cells, placements, sunkIds) {
+  const container = cells[0]?.parentElement;
+
+  if (!container) {
+    return;
+  }
+
+  const afloatLayer = getHullLayer(container, 'afloat');
+  const wreckLayer = getHullLayer(container, 'wrecks');
+  afloatLayer.replaceChildren();
+  wreckLayer.replaceChildren();
+
+  for (const placement of placements) {
+    const { size } = getShipDefinition(placement.shipId);
+    const vertical = placement.orientation === ORIENTATIONS.vertical;
+    const sunk = sunkIds.has(placement.shipId);
+    const hull = document.createElement('span');
+
+    hull.className = 'board__ship';
+    hull.classList.toggle('board__ship--sunk', sunk);
+    hull.style.gridColumn = `${placement.column + 2} / span ${vertical ? 1 : size}`;
+    hull.style.gridRow = `${placement.row + 2} / span ${vertical ? size : 1}`;
+    hull.append(
+      createShipSilhouette(placement.shipId, size, {
+        orientation: vertical ? 'vertical' : 'horizontal',
+      }),
+    );
+    (sunk ? wreckLayer : afloatLayer).append(hull);
+  }
+}
+
+/**
+ * Afloat hulls sit under the shot markers; wrecks sit above them, translucent,
+ * so a sunk ship is revealed without hiding the hits that sank it.
+ */
+function getHullLayer(container, variant) {
+  const existing = container.querySelector(`.board__hulls--${variant}`);
+
+  if (existing) {
+    return existing;
+  }
+
+  const layer = document.createElement('div');
+  layer.className = `board__hulls board__hulls--${variant}`;
+  layer.setAttribute('aria-hidden', 'true');
+  container.append(layer);
+  return layer;
 }
 
 /**
