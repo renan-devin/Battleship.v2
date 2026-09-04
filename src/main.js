@@ -23,6 +23,7 @@ import {
   startNewGame,
   toggleOrientation,
 } from './state/index.js';
+import { clearState, loadState, saveState } from './state/persistence.js';
 import {
   formatCoordinate,
   getPreviewCells,
@@ -39,6 +40,24 @@ const DIFFICULTY_LABELS = {
   hard: 'Hard opponent: hunts your fleet',
 };
 
+const RESUME_MESSAGES = {
+  placement: 'Match resumed: your fleet is where you left it.',
+  battle: 'Match resumed. Fire at the enemy waters.',
+  victory: 'Match resumed: the enemy fleet was already destroyed.',
+  defeat: 'Match resumed: your fleet was already lost.',
+};
+
+/**
+ * @returns {Storage|null} The browser storage, or null when it is unavailable.
+ */
+function getStorage() {
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
 function mount() {
   const playerBoard = document.querySelector('#player-board');
   const enemyBoard = document.querySelector('#enemy-board');
@@ -53,6 +72,7 @@ function mount() {
   const startButton = document.querySelector('#start-battle');
   const difficultySelect = document.querySelector('#difficulty');
   const difficultyBadge = document.querySelector('#difficulty-badge');
+  const resumeBadge = document.querySelector('#resume-badge');
   const result = document.querySelector('#result');
   const resultTitle = document.querySelector('#result-title');
   const resultDetail = document.querySelector('#result-detail');
@@ -66,9 +86,13 @@ function mount() {
   const shipRows = renderFleetRoster(fleetRoster);
   const enemyShipRows = renderFleetRoster(enemyRoster, { interactive: false });
 
-  let state = createInitialState();
+  const storage = getStorage();
+  const restored = loadState(storage);
+
+  let state = restored ?? createInitialState();
   let hoveredCell = null;
   let enemyTurnTimer = null;
+  let resumed = restored !== null;
 
   function announce(message) {
     if (statusMessage) {
@@ -129,6 +153,10 @@ function mount() {
 
     if (fleetHint) {
       fleetHint.hidden = !placing;
+    }
+
+    if (resumeBadge) {
+      resumeBadge.hidden = !resumed;
     }
   }
 
@@ -196,8 +224,14 @@ function mount() {
     renderResult();
   }
 
-  function update(nextState, message) {
+  function update(nextState, message, { keepResumeBadge = false, persist = true } = {}) {
     state = nextState;
+    resumed = resumed && keepResumeBadge;
+
+    if (persist) {
+      saveState(storage, state);
+    }
+
     render();
 
     if (message) {
@@ -226,7 +260,7 @@ function mount() {
         return;
       }
 
-      update(nextState, describeShot(nextState.lastShot));
+      update(nextState, describeShot(nextState.lastShot), { keepResumeBadge: true });
     }, ENEMY_TURN_DELAY_MS);
   }
 
@@ -382,7 +416,8 @@ function mount() {
 
   function newGame() {
     clearTimeout(enemyTurnTimer);
-    update(startNewGame(state), 'New game. Place your fleet.');
+    clearState(storage);
+    update(startNewGame(state), 'New game. Place your fleet.', { persist: false });
   }
 
   document.querySelector('#new-game')?.addEventListener('click', newGame);
@@ -400,7 +435,16 @@ function mount() {
   });
 
   render();
-  announce('Place your fleet: select a ship, press R to rotate and click a cell.');
+
+  if (resumed) {
+    announce(RESUME_MESSAGES[state.phase]);
+
+    if (isBattleActive(state) && state.turn === 'enemy') {
+      scheduleEnemyTurn();
+    }
+  } else {
+    announce('Place your fleet: select a ship, press R to rotate and click a cell.');
+  }
 }
 
 mount();
