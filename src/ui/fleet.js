@@ -7,7 +7,7 @@
  */
 
 import { FLEET, getShipHitCount, getSunkShipIds } from '../engine/index.js';
-import { createShipIcon } from './ship-icon.js';
+import { createShipSilhouette } from './ship-shapes.js';
 
 /**
  * Creates one row per ship in the fleet.
@@ -31,7 +31,10 @@ export function renderFleetRoster(container, options = {}) {
 
     const identity = document.createElement('span');
     identity.className = 'ship__identity';
-    identity.append(createShipIcon(ship.size), createSpan('ship__name', ship.name));
+    identity.append(
+      createShipSilhouette(ship.id, ship.size, { className: 'ship-shape ship__icon' }),
+      createSpan('ship__name', ship.name),
+    );
 
     row.append(identity, createShipPips(ship.size), createSpan('ship__status', ''));
     container.append(row);

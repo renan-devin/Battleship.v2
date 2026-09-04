@@ -471,6 +471,7 @@ h3 {
 /* Boards */
 
 .board {
+  position: relative;
   display: grid;
   grid-template-columns: var(--label-size) repeat(10, minmax(0, 1fr));
   grid-template-rows: var(--label-size) repeat(10, auto);
@@ -524,30 +525,83 @@ h3 {
   background-color: var(--color-water-hover);
   box-shadow: 0 0 0 1px rgb(70 213 194 / 55%);
   transform: scale(1.08);
-  z-index: 1;
+  z-index: 4;
 }
 
-/* Ships are drawn in CSS: a steel hull whose ends are rounded by part. */
+/* Water below a hull only carries a faint wake; the silhouette does the rest. */
 .cell--ship {
-  background: linear-gradient(180deg, #b7d0e0, var(--color-steel) 55%, #64879f);
-  border-color: rgb(232 242 250 / 55%);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 45%);
+  background-color: #17435f;
+  border-color: rgb(232 242 250 / 22%);
 }
 
-.cell--ship[data-ship-part='h-bow'] {
-  border-radius: 999px 3px 3px 999px;
+/*
+ * Hulls live on their own grid layer above the water: it mirrors the board
+ * tracks, so a ship spans exactly its cells without disturbing cell placement.
+ */
+.board__hulls {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: var(--label-size) repeat(10, minmax(0, 1fr));
+  grid-template-rows: var(--label-size) repeat(10, 1fr);
+  gap: var(--cell-gap);
+  padding: var(--space-2);
+  pointer-events: none;
 }
 
-.cell--ship[data-ship-part='h-stern'] {
-  border-radius: 3px 999px 999px 3px;
+.board__ship {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  filter: drop-shadow(0 2px 3px rgb(4 18 31 / 65%));
 }
 
-.cell--ship[data-ship-part='v-bow'] {
-  border-radius: 999px 999px 3px 3px;
+.board__ship svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--color-steel);
 }
 
-.cell--ship[data-ship-part='v-stern'] {
-  border-radius: 3px 3px 999px 999px;
+.board__hulls--wrecks {
+  z-index: 6;
+}
+
+.board__ship--sunk {
+  opacity: 0.45;
+  filter: none;
+  animation: sink var(--duration-medium) var(--ease-out);
+}
+
+.board__ship--sunk svg {
+  color: #f4e3e3;
+}
+
+.ship-shape__hull {
+  fill: currentcolor;
+}
+
+.ship-shape__tower,
+.ship-shape__detail,
+.ship-shape__fin {
+  fill: color-mix(in srgb, currentcolor 70%, var(--color-abyss));
+}
+
+.ship-shape__turret {
+  fill: color-mix(in srgb, currentcolor 55%, var(--color-abyss));
+}
+
+.ship-shape__line {
+  fill: none;
+  stroke: color-mix(in srgb, currentcolor 45%, var(--color-abyss));
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+
+.board__ship--sunk .ship-shape__hull {
+  fill: color-mix(in srgb, currentcolor 75%, var(--color-abyss));
 }
 
 /* Outranks the hover rule so the cell under the cursor shows the preview. */
@@ -559,6 +613,15 @@ h3 {
 .cell.cell--preview-invalid:not(:disabled):not([aria-disabled='true']) {
   background: var(--color-alert);
   box-shadow: 0 0 12px rgb(239 100 97 / 55%);
+}
+
+/* Battle states stay above the hull overlay so nothing they show is covered. */
+.cell--hit,
+.cell--miss,
+.cell--sunk,
+.cell--preview-valid,
+.cell--preview-invalid {
+  z-index: 3;
 }
 
 /* Shot markers: a sonar ring for a miss, a burning cross for a hit. */
@@ -677,19 +740,6 @@ button.ship:hover {
   width: calc(0.55rem * var(--ship-length, 3));
   height: auto;
   color: var(--color-steel);
-}
-
-.ship__icon-hull {
-  fill: currentcolor;
-}
-
-.ship__icon-deck {
-  stroke: rgb(4 18 31 / 55%);
-  stroke-width: 1;
-}
-
-.ship__icon-tower {
-  fill: currentcolor;
 }
 
 .ship__name {
@@ -945,7 +995,7 @@ button.ship:hover {
 
 .cell:focus-visible {
   outline-offset: 1px;
-  z-index: 2;
+  z-index: 7;
 }
 
 /* Responsive tuning */
