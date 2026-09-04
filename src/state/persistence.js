@@ -15,6 +15,7 @@ import {
   buildOccupancyGrid,
   canPlaceShip,
   isFleetDestroyed,
+  isShipSunk,
 } from '../engine/index.js';
 
 export const STORAGE_KEY = 'battleship.v2.match';
@@ -110,29 +111,30 @@ function parseShots(value, placements) {
   return shots;
 }
 
-function parseLastShot(value) {
-  if (!isRecord(value)) {
+/**
+ * Rebuilds the last shot from the shot history it belongs to, so the restored
+ * outcome is the one the boards actually describe rather than the one the save
+ * claims. Only the attacker and the coordinate are read from the payload.
+ */
+function parseLastShot(value, { shots, board }) {
+  if (!isRecord(value) || (value.by !== 'player' && value.by !== 'enemy')) {
     return null;
   }
 
-  const validCoordinate = isCoordinate(value.row) && isCoordinate(value.column);
-  const validAttacker = value.by === 'player' || value.by === 'enemy';
-  const validResult = value.result === 'hit' || value.result === 'miss';
+  const shot = shots[shots.length - 1];
 
-  if (!validCoordinate || !validAttacker || !validResult) {
+  if (!shot || shot.row !== value.row || shot.column !== value.column) {
     return null;
   }
-
-  const sunkShipId = SHIP_IDS.includes(value.sunkShipId) ? value.sunkShipId : null;
 
   return {
     by: value.by,
-    row: value.row,
-    column: value.column,
-    result: value.result,
-    hit: value.result === 'hit',
-    sunkShipId,
-    fleetDestroyed: value.fleetDestroyed === true,
+    row: shot.row,
+    column: shot.column,
+    result: shot.hit ? 'hit' : 'miss',
+    shipId: shot.shipId,
+    sunkShipId: shot.shipId && isShipSunk(board, shots, shot.shipId) ? shot.shipId : null,
+    fleetDestroyed: isFleetDestroyed(board, shots),
   };
 }
 
@@ -204,6 +206,24 @@ export function parseSavedState(payload) {
     return null;
   }
 
+  // The player opens and the sides alternate, so the histories can only be even
+  // (the player is up, or the enemy just won) or one player shot ahead (the
+  // enemy is up, or the player just won).
+  const pending = playerShots.length - enemyShots.length;
+  const expectedPending = turn === 'enemy' || saved.phase === 'victory' ? 1 : 0;
+
+  if (!placing && pending !== expectedPending) {
+    return null;
+  }
+
+  const lastAttacker = saved.lastShot?.by;
+  const lastShot = placing
+    ? null
+    : parseLastShot(saved.lastShot, {
+        shots: lastAttacker === 'enemy' ? enemyShots : playerShots,
+        board: lastAttacker === 'enemy' ? placements : enemyPlacements,
+      });
+
   return {
     phase: saved.phase,
     difficulty: saved.difficulty,
@@ -214,7 +234,7 @@ export function parseSavedState(payload) {
     playerShots,
     enemyShots,
     turn,
-    lastShot: parseLastShot(saved.lastShot),
+    lastShot,
   };
 }
 

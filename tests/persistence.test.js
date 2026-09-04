@@ -56,6 +56,13 @@ function shotAt(placements, row, column) {
   return { row, column, hit: shipId !== null, shipId };
 }
 
+/** Misses on the player's board, used to keep both histories in step. */
+function waterShots(count) {
+  return Array.from({ length: count }, (_unused, index) =>
+    shotAt(fixedFleet, 5 + Math.floor(index / 10), index % 10),
+  );
+}
+
 /** Minimal in-memory `Storage`, enough for the calls this module makes. */
 function createStorage(initial = {}) {
   const entries = new Map(Object.entries(initial));
@@ -82,11 +89,20 @@ describe('saveState and loadState', () => {
       difficulty: 'hard',
       turn: 'player',
       playerShots: [shotAt(enemyFleet, 5, 0), shotAt(enemyFleet, 9, 9)],
-      enemyShots: [shotAt(fixedFleet, 0, 0)],
+      enemyShots: [shotAt(fixedFleet, 0, 0), ...waterShots(1)],
     });
 
     expect(saveState(storage, state)).toBe(true);
     expect(loadState(storage)).toEqual({ ...state, lastShot: null });
+  });
+
+  it('restores the last shot with the ship it belongs to', () => {
+    const state = fireAtEnemy(battleState(), { row: 5, column: 0 });
+
+    saveState(storage, state);
+
+    expect(state.lastShot.result).toBe('hit');
+    expect(loadState(storage).lastShot).toEqual(state.lastShot);
   });
 
   it('round trips a full deployment, difficulty and orientation', () => {
@@ -105,7 +121,12 @@ describe('saveState and loadState', () => {
     const shots = enemyFleet.flatMap((placement) =>
       getShipCells(placement).map(({ row, column }) => shotAt(enemyFleet, row, column)),
     );
-    const state = battleState({ phase: 'victory', turn: null, playerShots: shots });
+    const state = battleState({
+      phase: 'victory',
+      turn: null,
+      playerShots: shots,
+      enemyShots: waterShots(shots.length - 1),
+    });
 
     saveState(storage, state);
 
@@ -139,7 +160,7 @@ describe('saveState and loadState', () => {
 describe('clearState', () => {
   it('drops the saved match, so a new game starts clean', () => {
     const storage = createStorage();
-    const finished = battleState({ playerShots: [shotAt(enemyFleet, 5, 0)] });
+    const finished = battleState({ turn: 'enemy', playerShots: [shotAt(enemyFleet, 5, 0)] });
 
     saveState(storage, finished);
     clearState(storage);
@@ -218,6 +239,14 @@ describe('corrupted saves', () => {
     ],
     ['a battle without an enemy fleet', serializeState({ ...battleState(), enemyPlacements: [] })],
     ['a battle without a turn', serializeState(battleState({ turn: null }))],
+    [
+      'a player shot the enemy never answered',
+      serializeState(battleState({ turn: 'player', playerShots: [shotAt(enemyFleet, 5, 0)] })),
+    ],
+    [
+      'an enemy shot the player never earned',
+      serializeState(battleState({ turn: 'enemy', enemyShots: waterShots(1) })),
+    ],
     ['a victory nobody won', serializeState(battleState({ phase: 'victory', turn: null }))],
     [
       'shots fired during deployment',
@@ -266,7 +295,7 @@ describe('resuming during the enemy turn', () => {
 
   it('keeps the enemy history when the reply landed before the reload', () => {
     const storage = createStorage();
-    const afterReply = fireAtPlayer(battleState({ turn: 'enemy' }), () => 0);
+    const afterReply = fireAtPlayer(fireAtEnemy(battleState(), { row: 9, column: 9 }), () => 0);
 
     saveState(storage, afterReply);
 

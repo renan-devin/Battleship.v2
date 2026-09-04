@@ -224,10 +224,14 @@ function mount() {
     renderResult();
   }
 
-  function update(nextState, message, { keepResumeBadge = false } = {}) {
+  function update(nextState, message, { keepResumeBadge = false, persist = true } = {}) {
     state = nextState;
     resumed = resumed && keepResumeBadge;
-    saveState(storage, state);
+
+    if (persist) {
+      saveState(storage, state);
+    }
+
     render();
 
     if (message) {
@@ -413,7 +417,7 @@ function mount() {
   function newGame() {
     clearTimeout(enemyTurnTimer);
     clearState(storage);
-    update(startNewGame(state), 'New game. Place your fleet.');
+    update(startNewGame(state), 'New game. Place your fleet.', { persist: false });
   }
 
   document.querySelector('#new-game')?.addEventListener('click', newGame);
