@@ -205,6 +205,14 @@ function mount() {
     turnIndicator.dataset.turn = state.turn ?? '';
   }
 
+  /** Highlights the board that is under fire so the turn is readable at a glance. */
+  function renderPanelFocus() {
+    const active = isBattleActive(state) ? state.turn : null;
+
+    playerBoard.closest('.panel')?.toggleAttribute('data-engaged', active === 'enemy');
+    enemyBoard.closest('.panel')?.toggleAttribute('data-engaged', active === 'player');
+  }
+
   function renderResult() {
     if (!result) {
       return;
@@ -235,8 +243,15 @@ function mount() {
     paintPlayerBoard(playerCells, state.placements, {
       preview: currentPreview(),
       shots: state.enemyShots,
+      lastShot: state.lastShot,
     });
-    paintEnemyBoard(enemyCells, state.enemyPlacements, state.playerShots, isBattleActive(state));
+    paintEnemyBoard(
+      enemyCells,
+      state.enemyPlacements,
+      state.playerShots,
+      isBattleActive(state),
+      state.lastShot,
+    );
     paintFleetRoster(shipRows, {
       placements: state.placements,
       shots: state.enemyShots,
@@ -246,11 +261,13 @@ function mount() {
     paintFleetRoster(enemyShipRows, {
       placements: state.enemyPlacements,
       shots: state.playerShots,
+      conceal: state.difficulty === 'hard',
     });
 
     renderControls();
     renderStrength();
     renderTurn();
+    renderPanelFocus();
     renderResult();
   }
 

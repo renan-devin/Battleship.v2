@@ -91,3 +91,13 @@ fired at C4.`
 - **Detection:** code review of the placement guards added for the battle phase.
 - **Fix:** `resetPlacements` returns the state untouched outside the `placement` phase.
   Covered by `placement actions during the battle > are ignored`.
+
+### 6. Board layers painted over the end-of-match overlay
+
+- **Symptom:** on victory or defeat the battle report card was cut into stripes: wherever a
+  board overlapped it, the cells, hull layers and shot markers were drawn on top of the card,
+  hiding its background and part of its title.
+- **Detection:** browser check of the victory screen at 1440px during the phase 7 polish.
+- **Fix:** the board layers use `z-index` values (hulls, markers, focus) inside a `.panel`
+  that was not a stacking context, so they competed with the overlay in the root stacking
+  context. `.panel` now sets `isolation: isolate` and `.result` sits at `z-index: 20`.

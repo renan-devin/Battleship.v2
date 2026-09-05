@@ -42,10 +42,23 @@ not match the fleet, a winner nobody earned - is discarded and the game starts f
 - Node.js 18.18 or newer
 - npm 9 or newer
 
-## Getting started
+## Play online
+
+The `main` branch is published to GitHub Pages by
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). Enable it once under
+**Settings > Pages > Build and deployment > Source: GitHub Actions**; every push to `main`
+then builds and publishes the site.
+
+Published version: https://renan-devin.github.io/Battleship.v2/
+
+## Run it locally
 
 ```bash
-npm install
+npm install       # once
+npm run dev       # http://localhost:5173
+npm test          # test suite
+npm run build     # production bundle in dist/
+npm run preview   # serve the production bundle
 ```
 
 ## Scripts

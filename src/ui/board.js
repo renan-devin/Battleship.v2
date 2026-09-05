@@ -10,6 +10,7 @@ import {
   buildOccupancyGrid,
   getShipCells,
   getShipDefinition,
+  getShipHitCount,
   getSunkShipIds,
   ORIENTATIONS,
 } from '../engine/index.js';
@@ -69,9 +70,10 @@ export function renderGrid(container, boardName) {
  * @param {object} [options]
  * @param {{ cells: Array<{row: number, column: number}>, valid: boolean }} [options.preview]
  * @param {Array<object>} [options.shots] - Shots the enemy fired at this board.
+ * @param {object} [options.lastShot] - Shot to highlight as the most recent one.
  */
 export function paintPlayerBoard(cells, placements, options = {}) {
-  const { preview, shots = [] } = options;
+  const { preview, shots = [], lastShot } = options;
   const occupancy = buildOccupancyGrid(placements);
   const shipParts = buildShipParts(placements);
   const shotsByCell = indexShots(shots);
@@ -92,6 +94,7 @@ export function paintPlayerBoard(cells, placements, options = {}) {
     cell.classList.toggle('cell--hit', Boolean(shot?.hit));
     cell.classList.toggle('cell--miss', Boolean(shot) && !shot.hit);
     cell.classList.toggle('cell--sunk', Boolean(shipId) && sunkIds.has(shipId));
+    cell.classList.toggle('cell--latest', isLatest(lastShot, 'enemy', row, column));
 
     if (shipId) {
       cell.dataset.shipId = shipId;
@@ -107,7 +110,7 @@ export function paintPlayerBoard(cells, placements, options = {}) {
     );
   }
 
-  paintSilhouettes(cells, placements, sunkIds);
+  paintSilhouettes(cells, placements, sunkIds, buildDamagedIds(placements, shots, sunkIds));
 }
 
 /**
@@ -117,11 +120,12 @@ export function paintPlayerBoard(cells, placements, options = {}) {
  * @param {Array<object>} placements - Enemy ships, used only to reveal sunk ones.
  * @param {Array<object>} shots - Shots the player fired at this board.
  * @param {boolean} inBattle - Untouched cells only accept fire during the battle.
+ * @param {object} [lastShot] - Shot to highlight as the most recent one.
  *
  * Cells already fired at keep the `disabled` attribute off and use
  * `aria-disabled` instead, so pressing Enter never drops keyboard focus.
  */
-export function paintEnemyBoard(cells, placements, shots, inBattle) {
+export function paintEnemyBoard(cells, placements, shots, inBattle, lastShot) {
   const shotsByCell = indexShots(shots);
   const sunkIds = new Set(getSunkShipIds(placements, shots));
   const occupancy = buildOccupancyGrid(placements);
@@ -136,6 +140,7 @@ export function paintEnemyBoard(cells, placements, shots, inBattle) {
     cell.classList.toggle('cell--hit', Boolean(shot?.hit));
     cell.classList.toggle('cell--miss', Boolean(shot) && !shot.hit);
     cell.classList.toggle('cell--sunk', sunk);
+    cell.classList.toggle('cell--latest', isLatest(lastShot, 'player', row, column));
     cell.disabled = !inBattle;
 
     if (shot) {
@@ -154,6 +159,7 @@ export function paintEnemyBoard(cells, placements, shots, inBattle) {
     cells,
     placements.filter((placement) => sunkIds.has(placement.shipId)),
     sunkIds,
+    new Set(),
   );
 }
 
@@ -162,7 +168,7 @@ export function paintEnemyBoard(cells, placements, shots, inBattle) {
  * The overlay never takes pointer events, and hit, miss and focus states keep a
  * higher stacking order so nothing they show is covered by a hull.
  */
-function paintSilhouettes(cells, placements, sunkIds) {
+function paintSilhouettes(cells, placements, sunkIds, damagedIds) {
   const container = cells[0]?.parentElement;
 
   if (!container) {
@@ -182,6 +188,7 @@ function paintSilhouettes(cells, placements, sunkIds) {
 
     hull.className = 'board__ship';
     hull.classList.toggle('board__ship--sunk', sunk);
+    hull.classList.toggle('board__ship--damaged', damagedIds.has(placement.shipId));
     hull.style.gridColumn = `${placement.column + 2} / span ${vertical ? 1 : size}`;
     hull.style.gridRow = `${placement.row + 2} / span ${vertical ? size : 1}`;
     hull.append(
@@ -236,6 +243,19 @@ function describeCell(shipId, shot, sunkIds) {
   }
 
   return shipId ? `: ${getShipDefinition(shipId).name}` : '';
+}
+
+/** Ships that took fire but are still afloat, so they can show scorch marks. */
+function buildDamagedIds(placements, shots, sunkIds) {
+  return new Set(
+    placements
+      .map((placement) => placement.shipId)
+      .filter((shipId) => !sunkIds.has(shipId) && getShipHitCount(placements, shots, shipId) > 0),
+  );
+}
+
+function isLatest(shot, by, row, column) {
+  return Boolean(shot) && shot.by === by && shot.row === row && shot.column === column;
 }
 
 function indexShots(shots) {

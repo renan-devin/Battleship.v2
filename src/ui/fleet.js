@@ -24,6 +24,7 @@ export function renderFleetRoster(container, options = {}) {
     const row = document.createElement(interactive ? 'button' : 'div');
     row.className = 'ship';
     row.dataset.shipId = ship.id;
+    row.dataset.shipName = ship.name;
 
     if (interactive) {
       row.type = 'button';
@@ -51,9 +52,16 @@ export function renderFleetRoster(container, options = {}) {
  * @param {Array<object>} [options.shots] - Shots fired at those ships.
  * @param {string|null} [options.selectedShipId]
  * @param {boolean} [options.showPlacement] - Show Placed/Pending instead of damage.
+ * @param {boolean} [options.conceal] - Redact ships that are still afloat.
  */
 export function paintFleetRoster(rows, options) {
-  const { placements, shots = [], selectedShipId = null, showPlacement = false } = options;
+  const {
+    placements,
+    shots = [],
+    selectedShipId = null,
+    showPlacement = false,
+    conceal = false,
+  } = options;
   const placedIds = new Set(placements.map((placement) => placement.shipId));
   const sunkIds = new Set(getSunkShipIds(placements, shots));
 
@@ -63,22 +71,29 @@ export function paintFleetRoster(rows, options) {
     const selected = selectedShipId === shipId;
     const sunk = sunkIds.has(shipId);
     const hits = getShipHitCount(placements, shots, shipId);
+    const concealed = conceal && !sunk;
 
     row.classList.toggle('ship--placed', placed);
     row.classList.toggle('ship--selected', selected);
     row.classList.toggle('ship--sunk', sunk);
-    row.dataset.state = rowState({ showPlacement, placed, sunk, hits });
+    row.classList.toggle('ship--concealed', concealed);
+    row.dataset.state = concealed ? 'unknown' : rowState({ showPlacement, placed, sunk, hits });
 
     if (row.tagName === 'BUTTON') {
       row.setAttribute('aria-pressed', String(selected));
     }
 
-    row.querySelector('.ship__status').textContent = showPlacement
-      ? statusForPlacement(placed)
-      : statusForBattle(placed, sunk, hits, row.querySelectorAll('.ship__pip').length);
+    row.querySelector('.ship__name').textContent = concealed
+      ? 'Unidentified'
+      : row.dataset.shipName;
+    row.querySelector('.ship__status').textContent = concealed
+      ? 'Unknown'
+      : showPlacement
+        ? statusForPlacement(placed)
+        : statusForBattle(placed, sunk, hits, row.querySelectorAll('.ship__pip').length);
 
     row.querySelectorAll('.ship__pip').forEach((pip, index) => {
-      pip.classList.toggle('ship__pip--hit', !showPlacement && index < hits);
+      pip.classList.toggle('ship__pip--hit', !concealed && !showPlacement && index < hits);
     });
   }
 }
