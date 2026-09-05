@@ -235,6 +235,17 @@ h3 {
   cursor: pointer;
 }
 
+/* Native popup: dark scheme plus explicit option colours keep both options
+   readable, including the one under the pointer. */
+.difficulty select {
+  color-scheme: dark;
+}
+
+.difficulty option {
+  color: var(--color-text);
+  background-color: var(--color-hull-strong);
+}
+
 .controls button:hover:not(:disabled),
 .difficulty select:hover:not(:disabled) {
   background: linear-gradient(180deg, #235a83, var(--color-hull-strong));
@@ -907,6 +918,22 @@ button.ship:hover {
 
 .ship[data-state='damaged'] .ship__status {
   color: var(--color-signal);
+}
+
+/* Hard mode: an enemy ship stays classified until it is sunk. */
+.ship[data-state='unknown'] {
+  border-left-color: rgb(143 178 201 / 45%);
+}
+
+.ship--concealed .ship__icon,
+.ship--concealed .ship__pips {
+  visibility: hidden;
+}
+
+.ship--concealed .ship__name,
+.ship--concealed .ship__status {
+  color: var(--color-text-muted);
+  font-style: italic;
 }
 
 .ship--selected {

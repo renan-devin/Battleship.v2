@@ -261,6 +261,7 @@ function mount() {
     paintFleetRoster(enemyShipRows, {
       placements: state.enemyPlacements,
       shots: state.playerShots,
+      conceal: state.difficulty === 'hard',
     });
 
     renderControls();
